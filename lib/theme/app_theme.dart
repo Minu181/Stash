@@ -46,6 +46,25 @@ class AppGradients {
     );
   }
 
+  /// Vibrant gradient — mixes the primary with a brighter complementary shade
+  /// so it stays rich in both light and dark modes.
+  static LinearGradient vibrant(BuildContext context, {GradientDirection direction = GradientDirection.diagonal}) {
+    final cs = Theme.of(context).colorScheme;
+    final hsl = HSLColor.fromColor(cs.primary);
+    final bright = HSLColor.fromAHSL(
+      1.0,
+      (hsl.hue + 25) % 360,
+      (hsl.saturation * 0.9).clamp(0.0, 1.0),
+      Theme.of(context).brightness == Brightness.light ? 0.48 : 0.55,
+    ).toColor();
+    return LinearGradient(
+      begin: direction.begin,
+      end: direction.end,
+      colors: [cs.primary, bright],
+      stops: const [0.0, 1.0],
+    );
+  }
+
   /// Subtle gradient for chips / small accents.
   static LinearGradient soft(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -93,7 +112,9 @@ class AppTheme {
 
   static ThemeData light([String themeId = 'aurora']) {
     final seed = presetById(themeId).lightSeed;
-    final cs = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light);
+    final cs = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light).copyWith(
+      primary: seed,
+    );
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -203,7 +224,9 @@ class AppTheme {
 
   static ThemeData dark([String themeId = 'aurora']) {
     final seed = presetById(themeId).darkSeed;
-    final cs = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark);
+    final cs = ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark).copyWith(
+      primary: seed,
+    );
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,

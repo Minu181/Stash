@@ -31,7 +31,7 @@ class GradientContainer extends StatelessWidget {
       height: height,
       padding: padding,
       decoration: BoxDecoration(
-        gradient: gradient ?? AppGradients.primary(context, direction: direction),
+        gradient: gradient ?? AppGradients.vibrant(context, direction: direction),
         borderRadius: shape == BoxShape.circle ? null : borderRadius,
         shape: shape,
       ),
@@ -133,7 +133,7 @@ class GradientFAB extends StatelessWidget {
       elevation: 6,
       child: Container(
         decoration: BoxDecoration(
-          gradient: AppGradients.primary(context, direction: GradientDirection.vertical),
+          gradient: AppGradients.vibrant(context, direction: GradientDirection.vertical),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(color: cs.primary.withValues(alpha: 0.45), blurRadius: 12, offset: const Offset(0, 6)),
@@ -192,7 +192,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
-          gradient: AppGradients.primary(context, direction: GradientDirection.diagonal),
+          gradient: AppGradients.vibrant(context, direction: GradientDirection.diagonal),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),

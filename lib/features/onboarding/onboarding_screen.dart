@@ -69,7 +69,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       width: 96,
       height: 96,
       decoration: BoxDecoration(
-        gradient: AppGradients.primary(context),
+        gradient: AppGradients.vibrant(context),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 14, offset: const Offset(0, 6)),
@@ -135,7 +135,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: AppGradients.primary(context),
+        gradient: AppGradients.vibrant(context),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(

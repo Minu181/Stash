@@ -391,7 +391,7 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: AppGradients.primary(context),
+                      gradient: AppGradients.vibrant(context),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(

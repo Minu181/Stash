@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         child: Scaffold(
           body: Container(
           decoration: BoxDecoration(
-            gradient: AppGradients.primary(context, direction: GradientDirection.vertical),
+            gradient: AppGradients.vibrant(context, direction: GradientDirection.vertical),
           ),
           child: Center(
             child: Column(

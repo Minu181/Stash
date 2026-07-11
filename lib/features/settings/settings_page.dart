@@ -7,12 +7,13 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/providers/data_providers.dart';
-import 'package:stash/providers/update_provider.dart';
 import 'package:stash/services/export_service.dart';
 import 'package:stash/services/notifications_service.dart';
+import 'package:stash/services/sound_service.dart';
 import 'package:stash/theme/app_theme.dart';
 import 'package:stash/widgets/animated_widgets.dart';
 import 'package:stash/widgets/ui.dart';
+import 'package:stash/widgets/whats_new_dialog.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -26,7 +27,7 @@ class SettingsPage extends ConsumerWidget {
     final reduceMotion = settings.reduceMotion;
 
     return Scaffold(
-      appBar: const GradientAppBar(title: 'Settings', subtitle: 'Make Savings Tracker yours'),
+      appBar: const GradientAppBar(title: 'Settings', subtitle: 'Make Stash yours'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
         children: [
@@ -122,6 +123,17 @@ class SettingsPage extends ConsumerWidget {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Sound effects', style: Theme.of(context).textTheme.labelLarge),
+                            Switch(
+                              value: SoundService.enabled,
+                              onChanged: (v) => SoundService.setEnabled(v),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -207,7 +219,25 @@ class SettingsPage extends ConsumerWidget {
               children: [
                 Text('App updates', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
-                _buildUpdateSection(context),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.system_update_rounded),
+                    title: const Text('Check for updates'),
+                    subtitle: const Text('Download & install the latest version'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => context.push('/update'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.new_releases_rounded),
+                    title: const Text("What's new"),
+                    subtitle: const Text('See what changed in the latest version'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => WhatsNewDialog.show(context),
+                  ),
+                ),
               ],
             ),
           ),
@@ -278,7 +308,7 @@ class SettingsPage extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.info_outline_rounded),
                     title: const Text('About'),
-                    subtitle: const Text('Version 1.0.1 — made by Ren'),
+                    subtitle: const Text('Version 1.0.2 — made by Ren'),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push('/about'),
                   ),
@@ -319,184 +349,6 @@ class SettingsPage extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => context.push('/achievements'),
           ),
-        );
-      },
-    );
-  }
-
-  static Widget _buildUpdateSection(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, _) {
-        final updateAsync = ref.watch(updateProvider);
-
-        return updateAsync.when(
-          loading: () => Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Checking for updates...',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          error: (_, __) => Card(
-            child: ListTile(
-              leading: const Icon(Icons.error_outline_rounded, color: Colors.red),
-              title: const Text('Update check failed'),
-              subtitle: const Text('Pull to refresh or try again later'),
-              trailing: IconButton(
-                icon: const Icon(Icons.refresh_rounded),
-                onPressed: () => ref.invalidate(updateProvider),
-              ),
-            ),
-          ),
-          data: (updateState) {
-            switch (updateState.status) {
-              case UpdateStatus.idle:
-              case UpdateStatus.checking:
-                return Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.check_circle_outline_rounded),
-                    title: const Text('You\'re up to date'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.refresh_rounded),
-                      onPressed: () => ref.invalidate(updateProvider),
-                    ),
-                  ),
-                );
-              case UpdateStatus.available:
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.system_update_rounded, color: Theme.of(context).colorScheme.primary),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Update available',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    'v${updateState.info!.version}',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (updateState.info!.changelog.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            'What\'s new:',
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            updateState.info!.changelog,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.5),
-                            maxLines: 6,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () => ref.read(updateProvider.notifier).download(),
-                            icon: const Icon(Icons.download_rounded),
-                            label: const Text('Download & Install'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              case UpdateStatus.downloading:
-                final received = updateState.receivedBytes / (1024 * 1024);
-                final total = updateState.totalBytes / (1024 * 1024);
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Downloading update...',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    '${(updateState.progress * 100).toStringAsFixed(1)}% — ${received.toStringAsFixed(1)} MB / ${total.toStringAsFixed(1)} MB',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: updateState.progress,
-                            minHeight: 8,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              case UpdateStatus.downloaded:
-                return Card(
-                  child: ListTile(
-                    leading: Icon(Icons.check_circle_rounded, color: Theme.of(context).colorScheme.primary),
-                    title: const Text('Download complete'),
-                    subtitle: const Text('Opening installer...'),
-                  ),
-                );
-              case UpdateStatus.error:
-                return Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.error_outline_rounded, color: Colors.red),
-                    title: const Text('Update failed'),
-                    subtitle: Text(updateState.error ?? 'Unknown error'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.refresh_rounded),
-                      onPressed: () => ref.invalidate(updateProvider),
-                    ),
-                  ),
-                );
-            }
-          },
         );
       },
     );

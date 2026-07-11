@@ -84,25 +84,7 @@ class NotificationsService {
     );
   }
 
-  static Future<void> showAchievementUnlocked(String badgeName) async {
-    if (!_initialized) await init();
-    final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _updateChannelId,
-        'App Updates',
-        channelDescription: 'Notifications about app updates',
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-      iOS: const DarwinNotificationDetails(),
-    );
-    await _plugin.show(
-      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title: 'Achievement unlocked!',
-      body: 'You earned the "$badgeName" badge',
-      notificationDetails: details,
-    );
-  }
+
 
   static Future<void> cancelReminder() async {
     await _plugin.cancel(id: _reminderId);

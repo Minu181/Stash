@@ -345,6 +345,13 @@ class HomePage extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
+            Text(
+              'This week',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            _StreakCalendar(streak: streak),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -478,6 +485,76 @@ class _DueSoonTile extends StatelessWidget {
           style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ),
+    );
+  }
+}
+
+class _StreakCalendar extends StatelessWidget {
+  final dynamic streak;
+  const _StreakCalendar({required this.streak});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastDeposit = streak.lastDepositDate;
+    final lastDay = lastDeposit != null ? DateTime(lastDeposit.year, lastDeposit.month, lastDeposit.day) : null;
+
+    final days = <DateTime>[];
+    for (var i = 6; i >= 0; i--) {
+      days.add(today.subtract(Duration(days: i)));
+    }
+
+    final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final dayOfWeek = today.weekday - 1;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(7, (i) {
+        final day = days[i];
+        final isToday = day == today;
+        bool active = false;
+        if (lastDay != null && !day.isBefore(lastDay)) {
+          final diff = day.difference(lastDay).inDays;
+          if (diff < streak.currentStreak) active = true;
+        }
+
+        final cs = Theme.of(context).colorScheme;
+        return Column(
+          children: [
+            Text(
+              dayLabels[(dayOfWeek - 6 + i + 7) % 7],
+              style: TextStyle(fontSize: 11, color: cs.outline),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: active
+                    ? const Color(0xFFFF6B35)
+                    : isToday
+                        ? cs.primaryContainer
+                        : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+                border: isToday
+                    ? Border.all(color: cs.primary, width: 1.5)
+                    : null,
+              ),
+              child: Center(
+                child: Text(
+                  '${day.day}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: active ? Colors.white : isToday ? cs.primary : cs.outline,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 }

@@ -13,20 +13,24 @@ class WhatsNewDialog extends StatelessWidget {
     if (lastSeen == appVersion) return;
     await prefs.setString('last_seen_version', appVersion);
     if (context.mounted) {
-      await showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: 'What\'s new',
-        transitionDuration: const Duration(milliseconds: 350),
-        pageBuilder: (_, __, ___) => const WhatsNewDialog(),
-        transitionBuilder: (_, animation, __, child) {
-          return ScaleTransition(
-            scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-            child: FadeTransition(opacity: animation, child: child),
-          );
-        },
-      );
+      await show(context);
     }
+  }
+
+  static Future<void> show(BuildContext context) async {
+    await showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'What\'s new',
+      transitionDuration: const Duration(milliseconds: 350),
+      pageBuilder: (_, __, ___) => const WhatsNewDialog(),
+      transitionBuilder: (_, animation, __, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          child: FadeTransition(opacity: animation, child: child),
+        );
+      },
+    );
   }
 
   @override
@@ -34,11 +38,11 @@ class WhatsNewDialog extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final features = [
+      (Icons.system_update_rounded, 'App updates', 'Dedicated page with changelog and download progress'),
+      (Icons.new_releases_rounded, "What's new button", 'Revisit changelogs from Settings'),
+      (Icons.local_fire_department_rounded, 'Streak calendar', 'See your deposit days at a glance'),
+      (Icons.volume_up_rounded, 'Sound effects', 'Audio feedback for deposits and goal completions'),
       (Icons.emoji_events_rounded, 'Achievements', 'View all your badges in the new Achievements page'),
-      (Icons.local_fire_department_rounded, 'Streak button', 'Quick access to your streak from the top bar'),
-      (Icons.notifications_active_rounded, 'Achievement notifications', 'Get notified when you unlock a badge'),
-      (Icons.refresh_rounded, 'Pull-to-refresh', 'Refresh any page by pulling down'),
-      (Icons.flag_rounded, 'Milestone celebrations', 'Confetti at 25%, 50%, and 75% progress'),
     ];
 
     return Dialog(

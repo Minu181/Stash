@@ -28,6 +28,13 @@ class AppDatabase extends _$AppDatabase {
               reduceMotion: const Value(false),
             ),
           );
+          await into(streaks).insert(
+            StreaksCompanion.insert(
+              id: const Value(0),
+              currentStreak: const Value(0),
+              longestStreak: const Value(0),
+            ),
+          );
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -177,8 +184,7 @@ class AppDatabase extends _$AppDatabase {
         goalId: Value(goalId),
       ),
     );
-    final def = achievementDefs.firstWhere((d) => d.type == badgeType, orElse: () => achievementDefs.first);
-    await NotificationsService.showAchievementUnlocked(def.label);
+
   }
 
   Future<void> checkAndUnlockAchievements({int? goalId}) async {

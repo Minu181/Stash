@@ -25,11 +25,14 @@ class HomePage extends ConsumerWidget {
     final achievementsAsync = ref.watch(achievementsProvider);
     final weeklySavings = ref.watch(weeklySavingsProvider);
 
+    final greeting = _greetingText();
+
     return Scaffold(
       appBar: GradientAppBar(
         title: settings.displayName != null && settings.displayName!.isNotEmpty
-            ? 'Hi, ${settings.displayName}'
-            : 'Stash',
+            ? '$greeting, ${settings.displayName}'
+            : '$greeting!',
+        subtitle: 'Let\'s grow your savings',
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded),
@@ -101,46 +104,74 @@ class HomePage extends ConsumerWidget {
                 child: GradientContainer(
                   borderRadius: BorderRadius.circular(24),
                   padding: const EdgeInsets.all(22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      Text(
-                        'Total saved',
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
-                      ),
-                      const SizedBox(height: 6),
-                      CountUpText(
-                        value: total,
-                        animate: !reduceMotion,
-                        format: (v) => formatCurrency(v, currency),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total saved',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          CountUpText(
+                            value: total,
+                            animate: !reduceMotion,
+                            format: (v) => formatCurrency(v, currency),
+                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: -1,
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'of ${formatCurrency(target, currency)} goal',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                          ),
+                          const SizedBox(height: 14),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: overall,
+                              minHeight: 8,
+                              backgroundColor: Colors.white.withValues(alpha: 0.2),
                               color: Colors.white,
                             ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${(overall * 100).toInt()}% complete',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.65),
+                                ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 14),
-                      AnimatedProgressRing(
-                        progress: overall,
-                        size: 56,
-                        strokeWidth: 7,
-                        color: Colors.white,
-                        animate: !reduceMotion,
-                        center: Text(
-                          '${(overall * 100).toInt()}%',
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: AnimatedProgressRing(
+                          progress: overall,
+                          size: 64,
+                          strokeWidth: 8,
+                          color: Colors.white,
+                          animate: !reduceMotion,
+                          center: Text(
+                            '${(overall * 100).toInt()}%',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Goal: ${formatCurrency(target, currency)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
                       ),
                     ],
                   ),
@@ -247,17 +278,18 @@ class HomePage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(Icons.emoji_events_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Achievements',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                        _SectionHeader(
+                          icon: Icons.emoji_events_rounded,
+                          title: 'Achievements',
+                          trailing: Text(
+                            '${unlocked.length}/${achievementDefs.length}',
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         _AutoScrollingAchievements(unlocked: unlocked, reduceMotion: reduceMotion),
                       ],
                     ),
@@ -268,15 +300,16 @@ class HomePage extends ConsumerWidget {
               slideFadeIn(
                 index: goals.length + 2,
                 animate: !reduceMotion,
-                child: Row(
-                  children: [
-                    Icon(Icons.flag_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Your goals',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                child: _SectionHeader(
+                  icon: Icons.flag_rounded,
+                  title: 'Your goals',
+                  trailing: Text(
+                    '${goals.length}',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -295,6 +328,13 @@ class HomePage extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  String _greetingText() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 
   void _showStreakSheet(BuildContext context, dynamic streak) {
@@ -546,17 +586,18 @@ class _DueSoon extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.event_repeat_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 8),
-            Text(
-              'Due soon',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ],
+        _SectionHeader(
+          icon: Icons.event_repeat_rounded,
+          title: 'Due soon',
+          trailing: Text(
+            '${upcoming.length}',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         for (var i = 0; i < upcoming.length; i++)
           slideFadeIn(
             index: i,
@@ -598,6 +639,42 @@ class _DueSoonTile extends StatelessWidget {
           style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Widget? trailing;
+
+  const _SectionHeader({required this.icon, required this.title, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
+          ),
+        ),
+        if (trailing != null) trailing!,
+      ],
     );
   }
 }

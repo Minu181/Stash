@@ -145,12 +145,13 @@ class GradientFAB extends StatelessWidget {
   }
 }
 
-/// A gradient AppBar with white title/subtitle and light status-bar icons.
+/// A gradient AppBar with a curved bottom edge, layered depth, and refined typography.
 class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final String? subtitle;
   final List<Widget>? actions;
   final Widget? leading;
+  final double bottomCurve;
 
   const GradientAppBar({
     super.key,
@@ -158,13 +159,18 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.actions,
     this.leading,
+    this.bottomCurve = 18,
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(subtitle != null ? 78 : kToolbarHeight);
+  Size get preferredSize => Size.fromHeight((subtitle != null ? 82 : kToolbarHeight) + bottomCurve);
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+
     return AppBar(
       leading: leading,
       actions: actions,
@@ -173,34 +179,72 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       centerTitle: false,
+      titleSpacing: 20,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 21, letterSpacing: -0.3),
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: subtitle != null ? 24 : 22,
+              letterSpacing: -0.5,
+              height: 1.1,
+              color: Colors.white,
+            ),
           ),
           if (subtitle != null) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               subtitle!,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.75),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
             ),
           ],
         ],
       ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: AppGradients.vibrant(context, direction: GradientDirection.diagonal),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+      flexibleSpace: ClipPath(
+        clipper: _AppBarClipper(bottomCurve),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                cs.primary,
+                HSLColor.fromAHSL(
+                  1.0,
+                  (HSLColor.fromColor(cs.primary).hue + 20) % 360,
+                  (HSLColor.fromColor(cs.primary).saturation * 0.85).clamp(0.0, 1.0),
+                  isDark ? 0.52 : 0.45,
+                ).toColor(),
+              ],
             ),
-          ],
+          ),
+          child: Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 20, bottom: 8),
+              child: Opacity(
+                opacity: isDark ? 0.06 : 0.08,
+                child: Icon(
+                  Icons.savings_rounded,
+                  size: 100,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
         ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: Size.fromHeight(bottomCurve),
+        child: const SizedBox.shrink(),
       ),
       systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -209,4 +253,27 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
+}
+
+class _AppBarClipper extends CustomClipper<Path> {
+  final double curveHeight;
+  _AppBarClipper(this.curveHeight);
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - curveHeight);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height + curveHeight * 0.4,
+      size.width,
+      size.height - curveHeight,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_AppBarClipper oldClipper) => oldClipper.curveHeight != curveHeight;
 }

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/providers/data_providers.dart';
+import 'package:stash/data/achievements.dart';
 import 'package:stash/services/export_service.dart';
 import 'package:stash/services/notifications_service.dart';
 import 'package:stash/constants.dart';
@@ -334,7 +335,7 @@ class SettingsPage extends ConsumerWidget {
           child: ListTile(
             leading: const Icon(Icons.emoji_events_rounded),
             title: const Text('Achievements'),
-            subtitle: Text('$count of 8 unlocked'),
+            subtitle: Text('$count of ${achievementDefs.length} unlocked'),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => context.push('/achievements'),
           ),

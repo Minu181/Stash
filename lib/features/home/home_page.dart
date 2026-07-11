@@ -258,63 +258,20 @@ class HomePage extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        SizedBox(
-                          height: 90,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: achievementDefs.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 10),
-                            itemBuilder: (context, index) {
-                              final def = achievementDefs[index];
-                              final unlockedBadge = unlocked.contains(def.type);
-                              return Container(
-                                width: 80,
-                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-                                decoration: BoxDecoration(
-                                  color: unlockedBadge
-                                      ? def.color.withValues(alpha: 0.12)
-                                      : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: unlockedBadge ? def.color.withValues(alpha: 0.4) : Theme.of(context).colorScheme.outlineVariant,
-                                    width: unlockedBadge ? 2 : 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      def.icon,
-                                      size: 28,
-                                      color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      def.label,
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w600,
-                                            color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
-                                          ),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                        _AutoScrollingAchievements(unlocked: unlocked, reduceMotion: reduceMotion),
                       ],
                     ),
                   );
                 },
               ),
               const SizedBox(height: 18),
-              Text(
-                'Your goals',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              slideFadeIn(
+                index: goals.length + 2,
+                animate: !reduceMotion,
+                child: Text(
+                  'Your goals',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(height: 10),
               for (var i = 0; i < goals.length; i++)
@@ -445,6 +402,112 @@ class _EmptyState extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AutoScrollingAchievements extends StatefulWidget {
+  final Set<String> unlocked;
+  final bool reduceMotion;
+  const _AutoScrollingAchievements({required this.unlocked, required this.reduceMotion});
+
+  @override
+  State<_AutoScrollingAchievements> createState() => _AutoScrollingAchievementsState();
+}
+
+class _AutoScrollingAchievementsState extends State<_AutoScrollingAchievements> {
+  late final ScrollController _scrollController;
+  late final Duration _scrollDuration;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollDuration = Duration(milliseconds: achievementDefs.length * 280);
+    if (!widget.reduceMotion) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
+    }
+  }
+
+  void _startAutoScroll() async {
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted || !_scrollController.hasClients) break;
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      if (maxScroll <= 0) continue;
+
+      await _scrollController.animateTo(
+        maxScroll,
+        duration: _scrollDuration,
+        curve: Curves.linear,
+      );
+      if (!mounted) break;
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted || !_scrollController.hasClients) break;
+      await _scrollController.animateTo(
+        0,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 90,
+      child: ListView.separated(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        itemCount: achievementDefs.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final def = achievementDefs[index];
+          final unlockedBadge = widget.unlocked.contains(def.type);
+          return Container(
+            width: 80,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+            decoration: BoxDecoration(
+              color: unlockedBadge
+                  ? def.color.withValues(alpha: 0.12)
+                  : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: unlockedBadge ? def.color.withValues(alpha: 0.4) : Theme.of(context).colorScheme.outlineVariant,
+                width: unlockedBadge ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  def.icon,
+                  size: 28,
+                  color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  def.label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
+                      ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

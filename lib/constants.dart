@@ -1,5 +1,5 @@
 const String appName = 'Stash';
-const String appVersion = '1.0.3';
+const String appVersion = '1.0.4';
 const String appAuthor = 'Ren';
 const String appDiscord = 'wtf_renn';
 

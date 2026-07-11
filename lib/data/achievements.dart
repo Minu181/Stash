@@ -33,11 +33,32 @@ const List<AchievementDef> achievementDefs = [
     Color(0xFFAB47BC),
   ),
   AchievementDef(
+    'five_hundred_saved',
+    'Halfway There',
+    'Saved over \$500 total',
+    Icons.trending_up_rounded,
+    Color(0xFF00897B),
+  ),
+  AchievementDef(
     'thousand_dollar_saved',
     'Big Saver',
     'Saved over \$1,000 total',
     Icons.account_balance_rounded,
     Color(0xFF1565C0),
+  ),
+  AchievementDef(
+    'five_thousand_saved',
+    'Money Bags',
+    'Saved over \$5,000 total',
+    Icons.monetization_on_rounded,
+    Color(0xFF2E7D32),
+  ),
+  AchievementDef(
+    'ten_thousand_saved',
+    'Wealthy',
+    'Saved over \$10,000 total',
+    Icons.diamond_rounded,
+    Color(0xFF6A1B9A),
   ),
   AchievementDef(
     'five_goals_completed',
@@ -52,6 +73,13 @@ const List<AchievementDef> achievementDefs = [
     'Made 10 transactions',
     Icons.receipt_long_rounded,
     Color(0xFF42A5F5),
+  ),
+  AchievementDef(
+    'fifty_transactions',
+    'Committed Saver',
+    'Made 50 transactions',
+    Icons.receipt_long_rounded,
+    Color(0xFF0277BD),
   ),
   AchievementDef(
     'five_deposits',

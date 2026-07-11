@@ -206,14 +206,26 @@ class AppDatabase extends _$AppDatabase {
     if (totalSaved >= 100) {
       await unlockAchievement('hundred_dollar_saved');
     }
+    if (totalSaved >= 500) {
+      await unlockAchievement('five_hundred_saved');
+    }
     if (totalSaved >= 1000) {
       await unlockAchievement('thousand_dollar_saved');
+    }
+    if (totalSaved >= 5000) {
+      await unlockAchievement('five_thousand_saved');
+    }
+    if (totalSaved >= 10000) {
+      await unlockAchievement('ten_thousand_saved');
     }
     if (completedCount >= 5) {
       await unlockAchievement('five_goals_completed');
     }
     if (allTransactions.length >= 10) {
       await unlockAchievement('ten_transactions');
+    }
+    if (allTransactions.length >= 50) {
+      await unlockAchievement('fifty_transactions');
     }
     if (depositCount >= 5) {
       await unlockAchievement('five_deposits');

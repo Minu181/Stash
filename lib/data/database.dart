@@ -3,7 +3,9 @@ import 'dart:developer';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:stash/data/achievements.dart';
 import 'package:stash/data/tables.dart';
+import 'package:stash/services/notifications_service.dart';
 
 part 'database.g.dart';
 
@@ -169,6 +171,8 @@ class AppDatabase extends _$AppDatabase {
         goalId: Value(goalId),
       ),
     );
+    final def = achievementDefs.firstWhere((d) => d.type == badgeType, orElse: () => achievementDefs.first);
+    await NotificationsService.showAchievementUnlocked(def.label);
   }
 
   Future<void> checkAndUnlockAchievements({int? goalId}) async {

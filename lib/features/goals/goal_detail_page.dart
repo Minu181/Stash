@@ -37,6 +37,14 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     final goal = goalsAsync.whenOrNull(data: (goals) => goals.where((g) => g.id == widget.goalId).firstOrNull);
 
     if (goal == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Goal not found'), backgroundColor: Colors.red),
+          );
+          context.pop();
+        }
+      });
       return Scaffold(
         appBar: const GradientAppBar(title: 'Goal'),
         body: const Center(child: CircularProgressIndicator()),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
@@ -32,7 +33,7 @@ class UpdateService {
       );
       if (response.statusCode != 200) return null;
 
-      final json = _parseJson(response.body);
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
       final tagName = json['tag_name'] as String? ?? '';
       final latestVersion = tagName.replaceFirst('v', '');
 
@@ -114,100 +115,5 @@ class UpdateService {
     if (result.type != ResultType.done) {
       throw Exception('Could not open APK: ${result.message}');
     }
-  }
-
-  static Map<String, dynamic> _parseJson(String text) {
-    final result = <String, dynamic>{};
-    text = text.trim();
-
-    // Simple JSON parser for GitHub API response
-    if (text.startsWith('{')) {
-      _parseObject(text, 0, result);
-    }
-    return result;
-  }
-
-  static int _parseObject(String text, int pos, Map<String, dynamic> result) {
-    pos++; // skip {
-    while (pos < text.length && text[pos] != '}') {
-      while (pos < text.length && (text[pos] == ',' || text[pos] == ' ' || text[pos] == '\n' || text[pos] == '\r')) pos++;
-      if (text[pos] == '}') break;
-
-      // Parse key
-      pos++; // skip "
-      final keyStart = pos;
-      while (pos < text.length && text[pos] != '"') {
-        if (text[pos] == '\\') pos++;
-        pos++;
-      }
-      final key = text.substring(keyStart, pos);
-      pos++; // skip "
-
-      while (pos < text.length && text[pos] != ':') pos++;
-      pos++; // skip :
-
-      // Parse value
-      while (pos < text.length && text[pos] == ' ') pos++;
-      if (text[pos] == '"') {
-        pos++; // skip "
-        final valStart = pos;
-        while (pos < text.length && text[pos] != '"') {
-          if (text[pos] == '\\') pos++;
-          pos++;
-        }
-        result[key] = text.substring(valStart, pos);
-        pos++; // skip "
-      } else if (text[pos] == '{') {
-        final inner = <String, dynamic>{};
-        pos = _parseObject(text, pos, inner);
-        result[key] = inner;
-      } else if (text[pos] == '[') {
-        pos = _parseArray(text, pos, result, key);
-      } else {
-        final valStart = pos;
-        while (pos < text.length && text[pos] != ',' && text[pos] != '}' && text[pos] != ' ') pos++;
-        final val = text.substring(valStart, pos);
-        if (val == 'true') {
-          result[key] = true;
-        } else if (val == 'false') {
-          result[key] = false;
-        } else if (val == 'null') {
-          result[key] = null;
-        } else {
-          result[key] = val;
-        }
-      }
-    }
-    return pos + 1;
-  }
-
-  static int _parseArray(String text, int pos, Map<String, dynamic> parent, String key) {
-    final list = <dynamic>[];
-    pos++; // skip [
-    while (pos < text.length && text[pos] != ']') {
-      while (pos < text.length && (text[pos] == ',' || text[pos] == ' ' || text[pos] == '\n')) pos++;
-      if (text[pos] == ']') break;
-
-      if (text[pos] == '"') {
-        pos++;
-        final valStart = pos;
-        while (pos < text.length && text[pos] != '"') {
-          if (text[pos] == '\\') pos++;
-          pos++;
-        }
-        list.add(text.substring(valStart, pos));
-        pos++;
-      } else if (text[pos] == '{') {
-        final inner = <String, dynamic>{};
-        pos = _parseObject(text, pos, inner);
-        list.add(inner);
-      } else {
-        final valStart = pos;
-        while (pos < text.length && text[pos] != ',' && text[pos] != ']') pos++;
-        list.add(text.substring(valStart, pos));
-      }
-    }
-    parent[key] = list;
-    return pos + 1;
   }
 }

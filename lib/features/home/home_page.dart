@@ -28,12 +28,49 @@ class HomePage extends ConsumerWidget {
       appBar: GradientAppBar(
         title: settings.displayName != null && settings.displayName!.isNotEmpty
             ? 'Hi, ${settings.displayName}'
-            : 'Savings Tracker',
+            : 'Stash',
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded),
             onPressed: () => showReminderDialog(context),
-          )
+          ),
+          streakAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (streak) {
+              if (streak.currentStreak == 0) return const SizedBox.shrink();
+              return IconButton(
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.local_fire_department_rounded),
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF6B35),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          '${streak.currentStreak}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                onPressed: () => _showStreakSheet(context, streak),
+              );
+            },
+          ),
         ],
       ),
       body: goalsAsync.when(
@@ -240,6 +277,85 @@ class HomePage extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  void _showStreakSheet(BuildContext context, dynamic streak) {
+    final cs = Theme.of(context).colorScheme;
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6B35), Color(0xFFFFD700)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 36),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '${streak.currentStreak} day streak',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              streak.currentStreak >= streak.longestStreak
+                  ? 'New personal best!'
+                  : 'Best: ${streak.longestStreak} days',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.outline),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _streakStat('Current', '${streak.currentStreak} days', cs),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _streakStat('Best', '${streak.longestStreak} days', cs),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _streakStat(String label, String value, ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: cs.outline)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface)),
+        ],
       ),
     );
   }

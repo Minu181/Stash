@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:stash/providers/settings_provider.dart';
+import 'package:stash/providers/data_providers.dart';
 import 'package:stash/providers/update_provider.dart';
 import 'package:stash/services/export_service.dart';
 import 'package:stash/services/notifications_service.dart';
@@ -191,6 +192,19 @@ class SettingsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Progress', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 8),
+                _buildAchievementsTile(context, ref),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          slideFadeIn(
+            index: 4,
+            animate: !reduceMotion,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text('App updates', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
                 _buildUpdateSection(context),
@@ -199,7 +213,7 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           slideFadeIn(
-            index: 4,
+            index: 5,
             animate: !reduceMotion,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,6 +288,39 @@ class SettingsPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  static Widget _buildAchievementsTile(BuildContext context, WidgetRef ref) {
+    final achievementsAsync = ref.watch(achievementsProvider);
+
+    return achievementsAsync.when(
+      loading: () => const Card(
+        child: ListTile(
+          leading: Icon(Icons.emoji_events_rounded),
+          title: Text('Achievements'),
+          subtitle: Text('Loading...'),
+        ),
+      ),
+      error: (_, __) => const Card(
+        child: ListTile(
+          leading: Icon(Icons.emoji_events_rounded),
+          title: Text('Achievements'),
+          subtitle: Text('Could not load'),
+        ),
+      ),
+      data: (achievements) {
+        final count = achievements.length;
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.emoji_events_rounded),
+            title: const Text('Achievements'),
+            subtitle: Text('$count of 8 unlocked'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/achievements'),
+          ),
+        );
+      },
     );
   }
 

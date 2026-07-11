@@ -13,6 +13,7 @@ import 'package:stash/features/goals/goal_form_page.dart';
 import 'package:stash/features/onboarding/splash_screen.dart';
 import 'package:stash/features/onboarding/onboarding_screen.dart';
 import 'package:stash/features/settings/about_page.dart';
+import 'package:stash/features/achievements/achievements_page.dart';
 import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/services/app_prefs.dart';
 import 'package:stash/widgets/ui.dart';
@@ -108,6 +109,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/about',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AboutPage(),
+      ),
+      GoRoute(
+        path: '/achievements',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AchievementsPage(),
       ),
     ],
     redirect: (context, state) {

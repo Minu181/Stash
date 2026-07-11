@@ -102,7 +102,13 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
       try {
         await appDatabase.updateStreak();
         await appDatabase.checkAndUnlockAchievements(goalId: widget.goal.id);
-      } catch (_) {}
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error updating progress: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
     }
 
     if (mounted) {

@@ -418,38 +418,40 @@ class _AutoScrollingAchievements extends StatefulWidget {
 
 class _AutoScrollingAchievementsState extends State<_AutoScrollingAchievements> {
   late final ScrollController _scrollController;
-  late final Duration _scrollDuration;
+  bool _resetting = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _scrollDuration = Duration(milliseconds: achievementDefs.length * 280);
     if (!widget.reduceMotion) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
     }
   }
 
   void _startAutoScroll() async {
+    await Future.delayed(const Duration(seconds: 1));
     while (mounted) {
-      await Future.delayed(const Duration(seconds: 2));
       if (!mounted || !_scrollController.hasClients) break;
       final maxScroll = _scrollController.position.maxScrollExtent;
-      if (maxScroll <= 0) continue;
-
-      await _scrollController.animateTo(
-        maxScroll,
-        duration: _scrollDuration,
-        curve: Curves.linear,
-      );
-      if (!mounted) break;
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted || !_scrollController.hasClients) break;
-      await _scrollController.animateTo(
-        0,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeOut,
-      );
+      if (maxScroll <= 0) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        continue;
+      }
+      final current = _scrollController.offset;
+      final target = current + 90;
+      if (target >= maxScroll) {
+        _resetting = true;
+        _scrollController.jumpTo(0);
+        _resetting = false;
+        await Future.delayed(const Duration(milliseconds: 600));
+      } else {
+        await _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      }
     }
   }
 
@@ -461,15 +463,20 @@ class _AutoScrollingAchievementsState extends State<_AutoScrollingAchievements> 
 
   @override
   Widget build(BuildContext context) {
+    final doubled = [
+      for (var i = 0; i < 2; i++)
+        for (var def in achievementDefs) def,
+    ];
     return SizedBox(
       height: 90,
       child: ListView.separated(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
-        itemCount: achievementDefs.length,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: doubled.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final def = achievementDefs[index];
+          final def = doubled[index];
           final unlockedBadge = widget.unlocked.contains(def.type);
           return Container(
             width: 80,

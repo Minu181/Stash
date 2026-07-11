@@ -41,8 +41,8 @@ class WhatsNewDialog extends StatelessWidget {
       (Icons.system_update_rounded, 'App updates', 'Dedicated page with changelog and download progress'),
       (Icons.new_releases_rounded, "What's new button", 'Revisit changelogs from Settings'),
       (Icons.local_fire_department_rounded, 'Streak calendar', 'See your deposit days at a glance'),
-      (Icons.volume_up_rounded, 'Sound effects', 'Audio feedback for deposits and goal completions'),
-      (Icons.emoji_events_rounded, 'Achievements', 'View all your badges in the new Achievements page'),
+      (Icons.savings_rounded, 'Weekly summary', 'Track your savings momentum each week'),
+      (Icons.emoji_events_rounded, 'Achievements', 'View all your badges in the Achievements page'),
     ];
 
     return Dialog(

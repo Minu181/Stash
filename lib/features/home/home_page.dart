@@ -23,6 +23,7 @@ class HomePage extends ConsumerWidget {
     final goalsAsync = ref.watch(goalsProvider);
     final streakAsync = ref.watch(streakProvider);
     final achievementsAsync = ref.watch(achievementsProvider);
+    final weeklySavings = ref.watch(weeklySavingsProvider);
 
     return Scaffold(
       appBar: GradientAppBar(
@@ -144,6 +145,46 @@ class HomePage extends ConsumerWidget {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 18),
+              weeklySavings.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (weekTotal) {
+                  if (weekTotal <= 0) return const SizedBox.shrink();
+                  return slideFadeIn(
+                    index: 0,
+                    animate: !reduceMotion,
+                    child: Card(
+                      child: ListTile(
+                        leading: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.savings_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
+                        ),
+                        title: Text(
+                          'This week',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          'You saved ${formatCurrency(weekTotal, currency)} in the last 7 days',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        trailing: Text(
+                          '+${formatCurrency(weekTotal, currency)}',
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 18),
               streakAsync.when(
@@ -293,20 +334,12 @@ class HomePage extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
+      showDragHandle: true,
       builder: (context) => Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
             Container(
               width: 64,
               height: 64,
@@ -506,7 +539,6 @@ class _StreakCalendar extends StatelessWidget {
     }
 
     final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final dayOfWeek = today.weekday - 1;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -523,7 +555,7 @@ class _StreakCalendar extends StatelessWidget {
         return Column(
           children: [
             Text(
-              dayLabels[(dayOfWeek - 6 + i + 7) % 7],
+              dayLabels[day.weekday - 1],
               style: TextStyle(fontSize: 11, color: cs.outline),
             ),
             const SizedBox(height: 6),

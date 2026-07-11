@@ -9,7 +9,7 @@ import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/providers/data_providers.dart';
 import 'package:stash/services/export_service.dart';
 import 'package:stash/services/notifications_service.dart';
-import 'package:stash/services/sound_service.dart';
+import 'package:stash/constants.dart';
 import 'package:stash/theme/app_theme.dart';
 import 'package:stash/widgets/animated_widgets.dart';
 import 'package:stash/widgets/ui.dart';
@@ -120,17 +120,6 @@ class SettingsPage extends ConsumerWidget {
                             Switch(
                               value: settings.reduceMotion,
                               onChanged: (v) => notifier.setReduceMotion(v),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Sound effects', style: Theme.of(context).textTheme.labelLarge),
-                            Switch(
-                              value: SoundService.enabled,
-                              onChanged: (v) => SoundService.setEnabled(v),
                             ),
                           ],
                         ),
@@ -308,7 +297,7 @@ class SettingsPage extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.info_outline_rounded),
                     title: const Text('About'),
-                    subtitle: const Text('Version 1.0.2 — made by Ren'),
+                    subtitle: Text('Version $appVersion — made by Ren'),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push('/about'),
                   ),

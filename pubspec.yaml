@@ -80,9 +80,6 @@ dependencies:
   open_file: ^3.5.4
   package_info_plus: ^8.3.0
 
-  # Sound effects
-  audioplayers: ^6.1.0
-
   # Icons / UI helpers
 
 dev_dependencies:
@@ -122,9 +119,6 @@ flutter:
           weight: 600
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
-
-  assets:
-    - assets/sounds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

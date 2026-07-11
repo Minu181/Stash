@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stash/data/database.dart';
 import 'package:stash/features/goals/goal_options.dart';
 import 'package:stash/providers/settings_provider.dart';
-import 'package:stash/services/sound_service.dart';
 import 'package:stash/widgets/goal_completed_dialog.dart';
 import 'package:stash/widgets/milestone_dialog.dart';
 
@@ -117,7 +116,6 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
       Navigator.of(context).pop();
 
       if (nowCompleted && _type == 'deposit') {
-        await SoundService.playGoalComplete();
         final currency = ref.read(settingsProvider).currency;
         GoalCompletedDialog.show(
           context,
@@ -126,7 +124,6 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
           currencySymbol: _symbols[currency] ?? '\$',
         );
       } else if (_type == 'deposit' && updatedGoal != null && updatedGoal.targetAmount > 0) {
-        await SoundService.playDeposit();
         final oldProgress = widget.goal.savedAmount / widget.goal.targetAmount;
         final newProgress = updatedGoal.savedAmount / updatedGoal.targetAmount;
         for (final milestone in [0.25, 0.50, 0.75]) {

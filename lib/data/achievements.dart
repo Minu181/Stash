@@ -33,6 +33,13 @@ const List<AchievementDef> achievementDefs = [
     Color(0xFFAB47BC),
   ),
   AchievementDef(
+    'thousand_dollar_saved',
+    'Big Saver',
+    'Saved over \$1,000 total',
+    Icons.account_balance_rounded,
+    Color(0xFF1565C0),
+  ),
+  AchievementDef(
     'five_goals_completed',
     'High Achiever',
     'Completed 5 goals',
@@ -47,11 +54,39 @@ const List<AchievementDef> achievementDefs = [
     Color(0xFF42A5F5),
   ),
   AchievementDef(
+    'five_deposits',
+    'Regular Saver',
+    'Made 5 deposits',
+    Icons.savings_rounded,
+    Color(0xFF66BB6A),
+  ),
+  AchievementDef(
+    'twentyfive_deposits',
+    'Dedicated',
+    'Made 25 deposits',
+    Icons.workspace_premium_rounded,
+    Color(0xFF7E57C2),
+  ),
+  AchievementDef(
+    'first_withdrawal',
+    'Cash Out',
+    'Made your first withdrawal',
+    Icons.payments_rounded,
+    Color(0xFFFF7043),
+  ),
+  AchievementDef(
     'streak_7_days',
     'On Fire',
     '7-day saving streak',
     Icons.local_fire_department_rounded,
     Color(0xFFFF6B35),
+  ),
+  AchievementDef(
+    'streak_14_days',
+    'Committed',
+    '14-day saving streak',
+    Icons.local_fire_department_rounded,
+    Color(0xFFFF8F00),
   ),
   AchievementDef(
     'streak_30_days',

@@ -19,6 +19,8 @@ import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/services/app_prefs.dart';
 import 'package:stash/widgets/ui.dart';
 import 'package:stash/widgets/whats_new_dialog.dart';
+import 'package:stash/widgets/update_available_dialog.dart';
+import 'package:stash/services/update_service.dart';
 
 CustomTransitionPage _fadeSlidePage(GoRouterState state, Widget child) {
   return CustomTransitionPage(
@@ -160,7 +162,19 @@ class _AppShellState extends ConsumerState<AppShell> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WhatsNewDialog.showIfNeeded(context);
+      _checkForUpdate();
     });
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final info = await UpdateService.fetchLatestRelease();
+      if (info == null || !mounted) return;
+      final isNewer = await UpdateService.isNewerVersion(info.version);
+      if (isNewer && mounted) {
+        UpdateAvailableDialog.show(context);
+      }
+    } catch (_) {}
   }
 
   void _onTap(int index) {

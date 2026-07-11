@@ -241,69 +241,73 @@ class HomePage extends ConsumerWidget {
                 data: (achievements) {
                   if (achievements.isEmpty) return const SizedBox.shrink();
                   final unlocked = achievements.map((a) => a.badgeType).toSet();
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.emoji_events_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Achievements',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 90,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: achievementDefs.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 10),
-                          itemBuilder: (context, index) {
-                            final def = achievementDefs[index];
-                            final unlockedBadge = unlocked.contains(def.type);
-                            return Container(
-                              width: 80,
-                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-                              decoration: BoxDecoration(
-                                color: unlockedBadge
-                                    ? def.color.withValues(alpha: 0.12)
-                                    : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: unlockedBadge ? def.color.withValues(alpha: 0.4) : Theme.of(context).colorScheme.outlineVariant,
-                                  width: unlockedBadge ? 2 : 1,
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    def.icon,
-                                    size: 28,
-                                    color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    def.label,
-                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w600,
-                                          color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
-                                        ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                  return slideFadeIn(
+                    index: 2,
+                    animate: !reduceMotion,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.emoji_events_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Achievements',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 90,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: achievementDefs.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 10),
+                            itemBuilder: (context, index) {
+                              final def = achievementDefs[index];
+                              final unlockedBadge = unlocked.contains(def.type);
+                              return Container(
+                                width: 80,
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                                decoration: BoxDecoration(
+                                  color: unlockedBadge
+                                      ? def.color.withValues(alpha: 0.12)
+                                      : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: unlockedBadge ? def.color.withValues(alpha: 0.4) : Theme.of(context).colorScheme.outlineVariant,
+                                    width: unlockedBadge ? 2 : 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      def.icon,
+                                      size: 28,
+                                      color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      def.label,
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w600,
+                                            color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
+                                          ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),

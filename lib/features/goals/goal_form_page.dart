@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:stash/data/database.dart';
@@ -30,6 +31,8 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
   DateTime? _deadline;
   String? _selectedImageUrl;
   bool _isPickingImage = false;
+  bool _showHexInput = false;
+  final _hexController = TextEditingController();
   late final bool _isEdit;
 
   @override
@@ -51,6 +54,7 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
   void dispose() {
     _nameController.dispose();
     _targetController.dispose();
+    _hexController.dispose();
     super.dispose();
   }
 
@@ -58,19 +62,44 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
     setState(() => _isPickingImage = true);
     try {
       final picker = ImagePicker();
-      final picked = await picker.pickImage(source: ImageSource.gallery);
-      if (picked != null) {
-        final bytes = await picked.readAsBytes();
-        final ext = picked.name.split('.').last.toLowerCase();
-        final dir = await getApplicationDocumentsDirectory();
-        final fileName = 'goal_${DateTime.now().millisecondsSinceEpoch}.$ext';
-        final destFile = File('${dir.path}/goal_images/$fileName');
-        await destFile.parent.create(recursive: true);
-        await destFile.writeAsBytes(bytes, flush: true);
-        setState(() {
-          _selectedImageUrl = destFile.path;
-        });
-      }
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop image',
+            toolbarColor: Theme.of(context).colorScheme.surface,
+            toolbarWidgetColor: Theme.of(context).colorScheme.onSurface,
+            activeControlsWidgetColor: Theme.of(context).colorScheme.primary,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Crop image',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+          ),
+        ],
+      );
+
+      final source = cropped != null ? File(cropped.path) : File(picked.path);
+      final bytes = await source.readAsBytes();
+      final dir = await getApplicationDocumentsDirectory();
+      final fileName = 'goal_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final destFile = File('${dir.path}/goal_images/$fileName');
+      await destFile.parent.create(recursive: true);
+      await destFile.writeAsBytes(bytes, flush: true);
+      setState(() {
+        _selectedImageUrl = destFile.path;
+      });
     } catch (_) {
     } finally {
       if (mounted) setState(() => _isPickingImage = false);
@@ -204,7 +233,10 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
                 children: GoalOptions.palette.map((c) {
                   final selected = c == _selectedColor;
                   return GestureDetector(
-                    onTap: () => setState(() => _selectedColor = c),
+                    onTap: () => setState(() {
+                      _selectedColor = c;
+                      _showHexInput = false;
+                    }),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       width: 40,
@@ -226,6 +258,85 @@ class _GoalFormPageState extends ConsumerState<GoalFormPage> {
                   );
                 }).toList(),
               ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => setState(() {
+                  _showHexInput = !_showHexInput;
+                  if (_showHexInput) {
+                    _hexController.text = _selectedColor.value.toRadixString(16).substring(2).toUpperCase();
+                  }
+                }),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: _selectedColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Custom color',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.outline),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(_showHexInput ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18, color: Theme.of(context).colorScheme.outline),
+                    ],
+                  ),
+                ),
+              ),
+              if (_showHexInput) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text('#', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.outline)),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: TextField(
+                        controller: _hexController,
+                        maxLength: 6,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          hintText: 'FF6750A4',
+                          hintStyle: TextStyle(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onChanged: (v) {
+                          if (v.length == 6) {
+                            final parsed = int.tryParse(v, radix: 16);
+                            if (parsed != null) {
+                              setState(() => _selectedColor = Color(0xFF000000 | parsed));
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _selectedColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 22),
               Text('Icon', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 10),

@@ -20,6 +20,12 @@ class GoalOptions {
     Color(0xFF43A047),
     Color(0xFF8E24AA),
     Color(0xFFF9A825),
+    Color(0xFF1A237E),
+    Color(0xFFFF7043),
+    Color(0xFF9CCC65),
+    Color(0xFF00ACC1),
+    Color(0xFF6D4C41),
+    Color(0xFF5C6BC0),
   ];
 
   static const List<IconData> icons = [

@@ -194,6 +194,8 @@ class AppDatabase extends _$AppDatabase {
     final completedCount = allGoals.where((g) => g.savedAmount >= g.targetAmount).length;
     final totalSaved = allGoals.fold<double>(0, (s, g) => s + g.savedAmount);
     final streak = await getStreak();
+    final depositCount = allTransactions.where((t) => t.type == 'deposit').length;
+    final withdrawalCount = allTransactions.where((t) => t.type == 'withdrawal').length;
 
     if (allTransactions.isNotEmpty) {
       await unlockAchievement('first_deposit');
@@ -204,14 +206,29 @@ class AppDatabase extends _$AppDatabase {
     if (totalSaved >= 100) {
       await unlockAchievement('hundred_dollar_saved');
     }
+    if (totalSaved >= 1000) {
+      await unlockAchievement('thousand_dollar_saved');
+    }
     if (completedCount >= 5) {
       await unlockAchievement('five_goals_completed');
     }
     if (allTransactions.length >= 10) {
       await unlockAchievement('ten_transactions');
     }
+    if (depositCount >= 5) {
+      await unlockAchievement('five_deposits');
+    }
+    if (depositCount >= 25) {
+      await unlockAchievement('twentyfive_deposits');
+    }
+    if (withdrawalCount >= 1) {
+      await unlockAchievement('first_withdrawal');
+    }
     if (streak.currentStreak >= 7) {
       await unlockAchievement('streak_7_days');
+    }
+    if (streak.currentStreak >= 14) {
+      await unlockAchievement('streak_14_days');
     }
     if (streak.currentStreak >= 30) {
       await unlockAchievement('streak_30_days');

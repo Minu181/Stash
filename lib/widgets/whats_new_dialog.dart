@@ -38,11 +38,11 @@ class WhatsNewDialog extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final features = [
-      (Icons.system_update_rounded, 'App updates', 'Dedicated page with changelog and download progress'),
-      (Icons.new_releases_rounded, "What's new button", 'Revisit changelogs from Settings'),
-      (Icons.local_fire_department_rounded, 'Streak calendar', 'See your deposit days at a glance'),
+      (Icons.image_rounded, 'Image cropping', 'Crop and adjust goal images before saving'),
+      (Icons.palette_rounded, 'Custom colors', 'Pick any color with hex input for goals'),
+      (Icons.emoji_events_rounded, 'More achievements', '5 new badges to unlock — 13 total'),
+      (Icons.system_update_rounded, 'Update dialog', 'Get notified about new versions on launch'),
       (Icons.savings_rounded, 'Weekly summary', 'Track your savings momentum each week'),
-      (Icons.emoji_events_rounded, 'Achievements', 'View all your badges in the Achievements page'),
     ];
 
     return Dialog(

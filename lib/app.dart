@@ -192,10 +192,23 @@ class _AppShellState extends ConsumerState<AppShell> {
         onPressed: () => context.push('/goal/new'),
       ).animate(autoPlay: !reduceMotion).scale(duration: const Duration(milliseconds: 250), curve: Curves.easeOutBack),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: widget.navigationShell.currentIndex,
-        onDestinationSelected: _onTap,
-        destinations: _destinations,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: NavigationBar(
+          selectedIndex: widget.navigationShell.currentIndex,
+          onDestinationSelected: _onTap,
+          destinations: _destinations,
+          elevation: 0,
+        ),
       ),
     );
   }

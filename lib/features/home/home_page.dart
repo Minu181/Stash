@@ -268,9 +268,15 @@ class HomePage extends ConsumerWidget {
               slideFadeIn(
                 index: goals.length + 2,
                 animate: !reduceMotion,
-                child: Text(
-                  'Your goals',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                child: Row(
+                  children: [
+                    Icon(Icons.flag_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Your goals',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 10),

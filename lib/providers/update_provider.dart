@@ -93,7 +93,26 @@ class UpdateNotifier extends AutoDisposeAsyncNotifier<UpdateState> {
     } catch (e) {
       state = AsyncValue.data(UpdateState(
         status: UpdateStatus.error,
+        info: current?.info,
         error: e.toString(),
+      ));
+    }
+  }
+
+  void cancelDownload() {
+    final current = state.valueOrNull;
+    state = AsyncValue.data(UpdateState(
+      status: UpdateStatus.available,
+      info: current?.info,
+    ));
+  }
+
+  void retry() {
+    final current = state.valueOrNull;
+    if (current?.info != null) {
+      state = AsyncValue.data(UpdateState(
+        status: UpdateStatus.available,
+        info: current!.info,
       ));
     }
   }

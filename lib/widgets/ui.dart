@@ -179,7 +179,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, letterSpacing: -0.3),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 21, letterSpacing: -0.3),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
@@ -192,7 +192,14 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
+          gradient: AppGradients.primary(context, direction: GradientDirection.diagonal),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
       ),
       systemOverlayStyle: const SystemUiOverlayStyle(

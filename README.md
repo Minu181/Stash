@@ -1,17 +1,54 @@
-# savings_tracker
+# Stash
 
-A new Flutter project.
+A beautiful personal savings tracker built with Flutter.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Goal tracking** — Create multiple savings goals with custom icons, colors, and target amounts
+- **Transaction history** — Log deposits and withdrawals with category tags and search/filter
+- **Insights** — Cumulative savings charts, per-period breakdowns, goal progress bars, and spending by category
+- **Daily reminders** — Customizable notification title and body to keep you on track
+- **Savings streaks** — Auto-tracked consecutive deposit streaks
+- **Achievement badges** — Unlock 8 badges as you hit milestones
+- **13 color themes** — Aurora, Ocean, Sunset, Forest, Lavender, Teal, Coral, Midnight, Rose, Cherry, Emerald, Slate, and more
+- **Import/Export** — Back up and restore your data as JSON
+- **In-app updates** — Checks GitHub Releases for new versions and downloads directly
 
-A few resources to get you started if this is your first Flutter project:
+## Download
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Go to [Releases](https://github.com/Minu181/Stash/releases) and download the APK for your device:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| File | Architecture |
+|------|-------------|
+| `app-armeabi-v7a-release.apk` | 32-bit ARM (most devices) |
+| `app-arm64-v8a-release.apk` | 64-bit ARM (modern devices) |
+| `app-x86_64-release.apk` | x86_64 (emulators, Chromebooks) |
+
+## Build from source
+
+```bash
+# Clone the repo
+git clone https://github.com/Minu181/Stash.git
+cd Stash
+
+# Install dependencies
+flutter pub get
+
+# Build split APKs
+flutter build apk --split-per-abi
+```
+
+Built APKs will be in `build/app/outputs/flutter-apk/`.
+
+## Tech stack
+
+- Flutter + Dart
+- Riverpod (state management)
+- Drift (SQLite database)
+- fl_chart (charts)
+- flutter_local_notifications
+- go_router
+
+## License
+
+MIT

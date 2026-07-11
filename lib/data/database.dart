@@ -119,8 +119,14 @@ class AppDatabase extends _$AppDatabase {
   Stream<Streak> watchStreak() =>
       (select(streaks)..where((s) => s.id.equals(0))).watchSingle();
 
-  Future<Streak> getStreak() =>
-      (select(streaks)..where((s) => s.id.equals(0))).getSingle();
+  Future<Streak> getStreak() async {
+    final row = await (select(streaks)..where((s) => s.id.equals(0))).getSingleOrNull();
+    if (row != null) return row;
+    await into(streaks).insert(
+      StreaksCompanion.insert(id: const Value(0), currentStreak: const Value(0), longestStreak: const Value(0)),
+    );
+    return (select(streaks)..where((s) => s.id.equals(0))).getSingle();
+  }
 
   Future<void> updateStreak() async {
     final now = DateTime.now();

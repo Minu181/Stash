@@ -38,7 +38,13 @@ class InsightsPage extends ConsumerWidget {
             final total = goals.fold<double>(0, (s, g) => s + g.savedAmount);
             final target = goals.fold<double>(0, (s, g) => s + g.targetAmount);
             final overall = (target > 0 ? total / target : 0.0).clamp(0.0, 1.0).toDouble();
-            return ListView(
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(goalsProvider);
+                ref.invalidate(allTransactionsProvider);
+                await Future.delayed(const Duration(milliseconds: 500));
+              },
+              child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               children: [
                 EnterTransition(
@@ -105,6 +111,7 @@ class InsightsPage extends ConsumerWidget {
                   child: _CategoryChart(txs: txs, currency: currency, animate: !reduceMotion),
                 ),
               ],
+            ),
             );
           },
         ),

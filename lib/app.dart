@@ -17,6 +17,7 @@ import 'package:stash/features/achievements/achievements_page.dart';
 import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/services/app_prefs.dart';
 import 'package:stash/widgets/ui.dart';
+import 'package:stash/widgets/whats_new_dialog.dart';
 
 CustomTransitionPage _fadeSlidePage(GoRouterState state, Widget child) {
   return CustomTransitionPage(
@@ -147,6 +148,14 @@ class _AppShellState extends ConsumerState<AppShell> {
     NavigationDestination(icon: Icon(Icons.insights_rounded), label: 'Insights'),
     NavigationDestination(icon: Icon(Icons.settings_rounded), label: 'Settings'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WhatsNewDialog.showIfNeeded(context);
+    });
+  }
 
   void _onTap(int index) {
     AppPrefs.setLastTab(index);

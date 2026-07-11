@@ -50,7 +50,12 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
             _ => goals,
           };
 
-          return ListView(
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(goalsProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             children: [
               SegmentedButton<String>(
@@ -67,15 +72,31 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Center(
-                    child: Text(
-                      _filter == 'completed'
-                          ? 'No completed goals yet.'
-                          : _filter == 'active'
-                              ? 'No active goals.'
-                              : 'No goals yet. Tap + to create one.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _filter == 'completed'
+                              ? Icons.check_circle_outline_rounded
+                              : _filter == 'active'
+                                  ? Icons.flag_rounded
+                                  : Icons.savings_outlined,
+                          size: 56,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _filter == 'completed'
+                              ? 'No completed goals yet.'
+                              : _filter == 'active'
+                                  ? 'No active goals.'
+                                  : 'No goals yet. Tap + to create one.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -90,6 +111,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                     ),
                   ),
             ],
+          ),
           );
         },
       ),

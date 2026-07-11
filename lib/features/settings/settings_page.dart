@@ -278,7 +278,7 @@ class SettingsPage extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.info_outline_rounded),
                     title: const Text('About'),
-                    subtitle: const Text('Version 1.0.0 — made by Ren'),
+                    subtitle: const Text('Version 1.0.1 — made by Ren'),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push('/about'),
                   ),

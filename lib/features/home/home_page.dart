@@ -85,7 +85,14 @@ class HomePage extends ConsumerWidget {
             return _EmptyState(reduceMotion: reduceMotion);
           }
 
-          return ListView(
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(goalsProvider);
+              ref.invalidate(streakProvider);
+              ref.invalidate(achievementsProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               EnterTransition(
@@ -275,6 +282,7 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
             ],
+          ),
           );
         },
       ),

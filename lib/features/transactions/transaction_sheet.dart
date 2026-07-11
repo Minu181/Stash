@@ -7,6 +7,7 @@ import 'package:stash/data/database.dart';
 import 'package:stash/features/goals/goal_options.dart';
 import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/widgets/goal_completed_dialog.dart';
+import 'package:stash/widgets/milestone_dialog.dart';
 
 class TransactionSheet extends ConsumerStatefulWidget {
   final Goal goal;
@@ -122,6 +123,21 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
           amount: updatedGoal.savedAmount,
           currencySymbol: _symbols[currency] ?? '\$',
         );
+      } else if (_type == 'deposit' && updatedGoal != null && updatedGoal.targetAmount > 0) {
+        final oldProgress = widget.goal.savedAmount / widget.goal.targetAmount;
+        final newProgress = updatedGoal.savedAmount / updatedGoal.targetAmount;
+        for (final milestone in [0.25, 0.50, 0.75]) {
+          if (oldProgress < milestone && newProgress >= milestone) {
+            if (mounted) {
+              MilestoneDialog.show(
+                context,
+                goalName: widget.goal.name,
+                percent: (milestone * 100).toInt(),
+              );
+            }
+            break;
+          }
+        }
       }
     }
   }

@@ -10,7 +10,6 @@ A beautiful personal savings tracker built with Flutter.
 - **Daily reminders** — Customizable notification title and body to keep you on track
 - **Savings streaks** — Auto-tracked consecutive deposit streaks
 - **Achievement badges** — Unlock 8 badges as you hit milestones
-- **13 color themes** — Aurora, Ocean, Sunset, Forest, Lavender, Teal, Coral, Midnight, Rose, Cherry, Emerald, Slate, and more
 - **Import/Export** — Back up and restore your data as JSON
 - **In-app updates** — Checks GitHub Releases for new versions and downloads directly
 

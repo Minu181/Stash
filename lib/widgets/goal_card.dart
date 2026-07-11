@@ -36,106 +36,94 @@ class GoalCard extends ConsumerWidget {
               ? BorderSide(color: gold.withValues(alpha: 0.5), width: 2)
               : BorderSide.none,
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              height: double.infinity,
-              color: completed ? gold : color,
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedProgressRing(
+                    progress: progress,
+                    size: 76,
+                    strokeWidth: 8,
+                    color: completed ? gold : color,
+                    animate: !reduceMotion,
+                    center: goal.imageUrl != null && goal.imageUrl!.isNotEmpty
+                        ? ClipOval(
+                            child: GoalImage(
+                              imageUrl: goal.imageUrl,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              fallback: Icon(icon, color: completed ? gold : color, size: 28),
+                            ),
+                          )
+                        : Icon(icon, color: completed ? gold : color, size: 30),
+                  ),
+                  if (completed)
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: gold,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
+                        ),
+                        child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Stack(
-                      clipBehavior: Clip.none,
+                    Row(
                       children: [
-                        AnimatedProgressRing(
-                          progress: progress,
-                          size: 76,
-                          strokeWidth: 8,
-                          color: completed ? gold : color,
-                          animate: !reduceMotion,
-                          center: goal.imageUrl != null && goal.imageUrl!.isNotEmpty
-                              ? ClipOval(
-                                  child: GoalImage(
-                                    imageUrl: goal.imageUrl,
-                                    width: 56,
-                                    height: 56,
-                                    fit: BoxFit.cover,
-                                    fallback: Icon(icon, color: completed ? gold : color, size: 28),
-                                  ),
-                                )
-                              : Icon(icon, color: completed ? gold : color, size: 30),
+                        Expanded(
+                          child: Text(
+                            goal.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         if (completed)
-                          Positioned(
-                            right: -2,
-                            bottom: -2,
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: gold,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
-                              ),
-                              child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: Icon(Icons.star_rounded, size: 18, color: gold),
                           ),
                       ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  goal.name,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (completed)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 6),
-                                  child: Icon(Icons.star_rounded, size: 18, color: gold),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          CountUpText(
-                            value: goal.savedAmount,
-                            animate: !reduceMotion,
-                            format: (v) => formatCurrency(v, currency),
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(color: completed ? gold : color),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            completed ? 'Completed!' : 'of ${formatCurrency(goal.targetAmount, currency)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: completed ? gold : Theme.of(context).colorScheme.outline,
-                                  fontWeight: completed ? FontWeight.w600 : null,
-                                ),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 4),
+                    CountUpText(
+                      value: goal.savedAmount,
+                      animate: !reduceMotion,
+                      format: (v) => formatCurrency(v, currency),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: completed ? gold : color),
                     ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: Theme.of(context).colorScheme.outline,
+                    const SizedBox(height: 2),
+                    Text(
+                      completed ? 'Completed!' : 'of ${formatCurrency(goal.targetAmount, currency)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: completed ? gold : Theme.of(context).colorScheme.outline,
+                            fontWeight: completed ? FontWeight.w600 : null,
+                          ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,4 @@
-package com.savingstracker.savings_tracker
+package com.savingstracker.stash
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -2,6 +2,8 @@
 
 A beautiful personal savings tracker built with Flutter.
 
+> **Note:** This app was vibecoded — built entirely through AI-assisted development.
+
 ## Features
 
 - **Goal tracking** — Create multiple savings goals with custom icons, colors, and target amounts

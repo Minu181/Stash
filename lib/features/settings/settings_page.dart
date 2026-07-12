@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stash/providers/settings_provider.dart';
 import 'package:stash/providers/data_providers.dart';
 import 'package:stash/data/achievements.dart';
+import 'package:stash/theme/app_theme.dart' show ThemePreset, presetById, lightThemePresets, darkThemePresets;
 import 'package:stash/services/export_service.dart';
 import 'package:stash/services/notifications_service.dart';
 import 'package:stash/constants.dart';
@@ -46,71 +47,36 @@ class SettingsPage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Theme mode', style: Theme.of(context).textTheme.labelLarge),
+                        Text('Theme', style: Theme.of(context).textTheme.labelLarge),
                         const SizedBox(height: 10),
-                        SegmentedButton<String>(
-                          segments: const [
-                            ButtonSegment(value: 'system', label: Text('System'), icon: Icon(Icons.brightness_auto_rounded)),
-                            ButtonSegment(value: 'light', label: Text('Light'), icon: Icon(Icons.light_mode_rounded)),
-                            ButtonSegment(value: 'dark', label: Text('Dark'), icon: Icon(Icons.dark_mode_rounded)),
-                          ],
-                          selected: {settings.themeMode},
-                          onSelectionChanged: (s) => notifier.setThemeMode(s.first),
-                        ),
-                        const SizedBox(height: 16),
-                        Text('Color palette', style: Theme.of(context).textTheme.labelLarge),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 42,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: themePresets.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 8),
-                            itemBuilder: (context, index) {
-                              final preset = themePresets[index];
-                              final selected = settings.themeId == preset.id;
-                              return GestureDetector(
-                                onTap: () => notifier.setThemeId(preset.id),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        GestureDetector(
+                          onTap: () => context.push('/theme'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
                                   decoration: BoxDecoration(
-                                    color: selected ? preset.lightSeed.withValues(alpha: 0.15) : Theme.of(context).colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: selected ? preset.lightSeed : Theme.of(context).colorScheme.outlineVariant,
-                                      width: selected ? 2.5 : 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 14,
-                                        height: 14,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [preset.lightSeed, preset.darkSeed],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        preset.name,
-                                        style: TextStyle(
-                                          fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                                          fontSize: 12,
-                                          color: selected ? preset.lightSeed : null,
-                                        ),
-                                      ),
-                                    ],
+                                    color: presetById(settings.themeId).seed,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
-                              );
-                            },
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    presetById(settings.themeId).name,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.outline),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -121,6 +87,17 @@ class SettingsPage extends ConsumerWidget {
                             Switch(
                               value: settings.reduceMotion,
                               onChanged: (v) => notifier.setReduceMotion(v),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Achievements showcase', style: Theme.of(context).textTheme.labelLarge),
+                            Switch(
+                              value: settings.showAchievements,
+                              onChanged: (_) => notifier.toggleShowAchievements(),
                             ),
                           ],
                         ),

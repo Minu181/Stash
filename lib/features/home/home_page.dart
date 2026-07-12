@@ -20,6 +20,7 @@ class HomePage extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final currency = settings.currency;
     final reduceMotion = settings.reduceMotion;
+    final showAchievements = settings.showAchievements;
     final goalsAsync = ref.watch(goalsProvider);
     final streakAsync = ref.watch(streakProvider);
     final achievementsAsync = ref.watch(achievementsProvider);
@@ -97,80 +98,91 @@ class HomePage extends ConsumerWidget {
               await Future.delayed(const Duration(milliseconds: 500));
             },
             child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
             children: [
+              Container(
+                height: 0,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+              ),
               EnterTransition(
                 animate: !reduceMotion,
                 child: GradientContainer(
                   borderRadius: BorderRadius.circular(24),
                   padding: const EdgeInsets.all(22),
-                  child: Stack(
-                    clipBehavior: Clip.none,
+                  child: Row(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total saved',
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          CountUpText(
-                            value: total,
-                            animate: !reduceMotion,
-                            format: (v) => formatCurrency(v, currency),
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -1,
-                                ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'of ${formatCurrency(target, currency)} goal',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                          ),
-                          const SizedBox(height: 14),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: LinearProgressIndicator(
-                              value: overall,
-                              minHeight: 8,
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
-                              color: Colors.white,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Total saved',
+                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${(overall * 100).toInt()}% complete',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.65),
-                                ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            CountUpText(
+                              value: total,
+                              animate: !reduceMotion,
+                              format: (v) => formatCurrency(v, currency),
+                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: -1,
+                                  ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'of ${formatCurrency(target, currency)} goal',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                  ),
+                            ),
+                            const SizedBox(height: 14),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(
+                                value: overall,
+                                minHeight: 8,
+                                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${(overall * 100).toInt()}% complete',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.65),
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: AnimatedProgressRing(
-                          progress: overall,
-                          size: 64,
-                          strokeWidth: 8,
-                          color: Colors.white,
-                          animate: !reduceMotion,
-                          center: Text(
-                            '${(overall * 100).toInt()}%',
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                          ),
+                      const SizedBox(width: 16),
+                      AnimatedProgressRing(
+                        progress: overall,
+                        size: 72,
+                        strokeWidth: 8,
+                        color: Colors.white,
+                        animate: !reduceMotion,
+                        center: Text(
+                          '${(overall * 100).toInt()}%',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
                         ),
                       ),
                     ],
@@ -183,33 +195,124 @@ class HomePage extends ConsumerWidget {
                 error: (_, __) => const SizedBox.shrink(),
                 data: (weekTotal) {
                   if (weekTotal <= 0) return const SizedBox.shrink();
+                  final cs = Theme.of(context).colorScheme;
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
                   return slideFadeIn(
                     index: 0,
                     animate: !reduceMotion,
-                    child: Card(
-                      child: ListTile(
-                        leading: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: cs.primary.withValues(alpha: 0.25),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
                           ),
-                          child: Icon(Icons.savings_rounded, color: Theme.of(context).colorScheme.primary, size: 24),
-                        ),
-                        title: Text(
-                          'This week',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          'You saved ${formatCurrency(weekTotal, currency)} in the last 7 days',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        trailing: Text(
-                          '+${formatCurrency(weekTotal, currency)}',
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                          BoxShadow(
+                            color: cs.primary.withValues(alpha: 0.1),
+                            blurRadius: 40,
+                            offset: const Offset(0, 16),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                cs.primary,
+                                HSLColor.fromAHSL(
+                                  1.0,
+                                  (HSLColor.fromColor(cs.primary).hue + 30) % 360,
+                                  (HSLColor.fromColor(cs.primary).saturation * 0.8).clamp(0.0, 1.0),
+                                  isDark ? 0.48 : 0.42,
+                                ).toColor(),
+                              ],
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                right: -20,
+                                top: -20,
+                                child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.1),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                right: 30,
+                                bottom: -30,
+                                child: Container(
+                                  width: 70,
+                                  height: 70,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: isDark ? 0.04 : 0.07),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(18),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: const Icon(Icons.savings_rounded, color: Colors.white, size: 26),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'This week',
+                                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            'You saved ${formatCurrency(weekTotal, currency)}',
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: Colors.white.withValues(alpha: 0.75),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        '+${formatCurrency(weekTotal, currency)}',
+                                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -223,39 +326,112 @@ class HomePage extends ConsumerWidget {
                 error: (_, __) => const SizedBox.shrink(),
                 data: (streak) {
                   if (streak.currentStreak == 0) return const SizedBox.shrink();
+                  final isBest = streak.currentStreak >= streak.longestStreak;
                   return slideFadeIn(
                     index: 0,
                     animate: !reduceMotion,
-                    child: Card(
-                      child: ListTile(
-                        leading: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF6B35), Color(0xFFFFD700)],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF6B35).withValues(alpha: 0.3),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                          BoxShadow(
+                            color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
+                            blurRadius: 40,
+                            offset: const Offset(0, 16),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
+                              colors: [Color(0xFFFF6B35), Color(0xFFFFB300)],
                             ),
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 24),
-                        ),
-                        title: Text(
-                          '${streak.currentStreak} day streak!',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          streak.currentStreak >= streak.longestStreak
-                              ? 'New personal best!'
-                              : 'Best: ${streak.longestStreak} days',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        trailing: Text(
-                          '${streak.currentStreak}',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFFF6B35),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                right: -8,
+                                top: -8,
+                                child: Icon(
+                                  Icons.local_fire_department_rounded,
+                                  size: 60,
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                ),
+                              ),
+                              Positioned(
+                                right: 40,
+                                bottom: -12,
+                                child: Icon(
+                                  Icons.local_fire_department_rounded,
+                                  size: 44,
+                                  color: Colors.white.withValues(alpha: 0.06),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(18),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 26),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${streak.currentStreak} day streak!',
+                                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            isBest ? 'New personal best!' : 'Best: ${streak.longestStreak} days',
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: Colors.white.withValues(alpha: 0.75),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${streak.currentStreak}',
+                                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                            fontWeight: FontWeight.w900,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -266,30 +442,77 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 18),
               _DueSoon(goals: goals, currency: currency, reduceMotion: reduceMotion),
               const SizedBox(height: 18),
-              achievementsAsync.when(
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-                data: (achievements) {
+              if (showAchievements)
+                achievementsAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                  data: (achievements) {
                   if (achievements.isEmpty) return const SizedBox.shrink();
                   final unlocked = achievements.map((a) => a.badgeType).toSet();
+                  final progress = unlocked.length / achievementDefs.length;
                   return slideFadeIn(
                     index: 2,
                     animate: !reduceMotion,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SectionHeader(
-                          icon: Icons.emoji_events_rounded,
-                          title: 'Achievements',
-                          trailing: Text(
-                            '${unlocked.length}/${achievementDefs.length}',
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        // ── Header with gradient icon + progress bar ──
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Theme.of(context).colorScheme.primary,
+                                    Theme.of(context).colorScheme.tertiary,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(11),
+                              ),
+                              child: const Icon(Icons.emoji_events_rounded, size: 20, color: Colors.white),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Achievements',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${unlocked.length}/${achievementDefs.length}',
+                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.w700,
                                 ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        // Progress bar
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 4,
+                            backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+                            valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         _AutoScrollingAchievements(unlocked: unlocked, reduceMotion: reduceMotion),
                       ],
                     ),
@@ -300,16 +523,49 @@ class HomePage extends ConsumerWidget {
               slideFadeIn(
                 index: goals.length + 2,
                 animate: !reduceMotion,
-                child: _SectionHeader(
-                  icon: Icons.flag_rounded,
-                  title: 'Your goals',
-                  trailing: Text(
-                    '${goals.length}',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.tertiary,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: const Icon(Icons.flag_rounded, size: 20, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Your goals',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${goals.length}',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
                           color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w700,
                         ),
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 10),
@@ -464,7 +720,6 @@ class _AutoScrollingAchievements extends StatefulWidget {
 
 class _AutoScrollingAchievementsState extends State<_AutoScrollingAchievements> {
   late final ScrollController _scrollController;
-  bool _resetting = false;
 
   @override
   void initState() {
@@ -476,27 +731,26 @@ class _AutoScrollingAchievementsState extends State<_AutoScrollingAchievements> 
   }
 
   void _startAutoScroll() async {
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 2));
     while (mounted) {
       if (!mounted || !_scrollController.hasClients) break;
       final maxScroll = _scrollController.position.maxScrollExtent;
       if (maxScroll <= 0) {
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 200));
         continue;
       }
       final current = _scrollController.offset;
-      final target = current + 90;
+      final target = current + 100;
       if (target >= maxScroll) {
-        _resetting = true;
         _scrollController.jumpTo(0);
-        _resetting = false;
-        await Future.delayed(const Duration(milliseconds: 600));
+        await Future.delayed(const Duration(seconds: 1));
       } else {
         await _scrollController.animateTo(
           target,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 1200),
+          curve: Curves.easeInOutCubic,
         );
+        await Future.delayed(const Duration(milliseconds: 800));
       }
     }
   }
@@ -514,7 +768,7 @@ class _AutoScrollingAchievementsState extends State<_AutoScrollingAchievements> 
         for (var def in achievementDefs) def,
     ];
     return SizedBox(
-      height: 90,
+      height: 110,
       child: ListView.separated(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
@@ -523,44 +777,103 @@ class _AutoScrollingAchievementsState extends State<_AutoScrollingAchievements> 
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final def = doubled[index];
-          final unlockedBadge = widget.unlocked.contains(def.type);
-          return Container(
-            width: 80,
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-            decoration: BoxDecoration(
-              color: unlockedBadge
-                  ? def.color.withValues(alpha: 0.12)
-                  : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: unlockedBadge ? def.color.withValues(alpha: 0.4) : Theme.of(context).colorScheme.outlineVariant,
-                width: unlockedBadge ? 2 : 1,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  def.icon,
-                  size: 28,
-                  color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  def.label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: unlockedBadge ? def.color : Theme.of(context).colorScheme.outline,
-                      ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          );
+          final isUnlocked = widget.unlocked.contains(def.type);
+          return _AchievementBadge(def: def, isUnlocked: isUnlocked);
         },
+      ),
+    );
+  }
+}
+
+class _AchievementBadge extends StatelessWidget {
+  final AchievementDef def;
+  final bool isUnlocked;
+
+  const _AchievementBadge({required this.def, required this.isUnlocked});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final width = isUnlocked ? 96.0 : 74.0;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      width: width,
+      padding: EdgeInsets.symmetric(
+        vertical: isUnlocked ? 14 : 10,
+        horizontal: 6,
+      ),
+      decoration: BoxDecoration(
+        gradient: isUnlocked
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  def.color.withValues(alpha: 0.25),
+                  def.color.withValues(alpha: 0.08),
+                ],
+              )
+            : null,
+        color: isUnlocked ? null : cs.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isUnlocked ? def.color.withValues(alpha: 0.55) : cs.outlineVariant.withValues(alpha: 0.4),
+          width: isUnlocked ? 2 : 1,
+        ),
+        boxShadow: isUnlocked
+            ? [
+                BoxShadow(
+                  color: def.color.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  spreadRadius: -3,
+                  offset: const Offset(0, 5),
+                ),
+                BoxShadow(
+                  color: def.color.withValues(alpha: 0.1),
+                  blurRadius: 28,
+                  spreadRadius: -6,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: isUnlocked ? 46 : 36,
+            height: isUnlocked ? 46 : 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: isUnlocked
+                  ? RadialGradient(
+                      colors: [
+                        def.color.withValues(alpha: 0.35),
+                        def.color.withValues(alpha: 0.08),
+                      ],
+                    )
+                  : null,
+              color: isUnlocked ? null : cs.outlineVariant.withValues(alpha: 0.15),
+            ),
+            child: Icon(
+              def.icon,
+              size: isUnlocked ? 26 : 20,
+              color: isUnlocked ? def.color : cs.outline.withValues(alpha: 0.4),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            def.label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontSize: isUnlocked ? 10.5 : 9,
+              fontWeight: isUnlocked ? FontWeight.w700 : FontWeight.w500,
+              color: isUnlocked ? def.color : cs.outline.withValues(alpha: 0.55),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -626,7 +939,7 @@ class _DueSoonTile extends StatelessWidget {
       child: ListTile(
         onTap: () => context.push('/goal/${goal.id}'),
         leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.15),
+          backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(Icons.flag_rounded, color: color),
         ),
         title: Text(goal.name, maxLines: 1, overflow: TextOverflow.ellipsis),

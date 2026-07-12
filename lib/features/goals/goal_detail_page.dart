@@ -109,24 +109,49 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // ── Hero image ──
             if (goal.imageUrl != null && goal.imageUrl!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: GoalImage(
-                    imageUrl: goal.imageUrl,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    fallback: Container(
-                      height: 180,
-                      color: color.withValues(alpha: 0.12),
-                      child: Icon(icon, size: 48, color: color),
-                    ),
+                  child: Stack(
+                    children: [
+                      GoalImage(
+                        imageUrl: goal.imageUrl,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        fallback: Container(
+                          height: 200,
+                          color: color.withValues(alpha: 0.2),
+                          child: Icon(icon, size: 56, color: color),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 60,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Theme.of(context).scaffoldBackgroundColor,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ).animate(autoPlay: !reduceMotion).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
               ),
+
+            // ── Completed banner ──
             if (completed)
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -142,8 +167,16 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.celebration_rounded, color: _gold, size: 28),
-                    const SizedBox(width: 12),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _gold.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.celebration_rounded, color: _gold, size: 24),
+                    ),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,14 +184,16 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                           Text(
                             'Goal Reached!',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: _gold,
-                                ),
+                              fontWeight: FontWeight.bold,
+                              color: _gold,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             'You saved ${formatCurrency(goal.savedAmount, currency)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: _gold.withValues(alpha: 0.8)),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: _gold.withValues(alpha: 0.8),
+                            ),
                           ),
                         ],
                       ),
@@ -166,116 +201,183 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                   ],
                 ),
               ).animate(autoPlay: !reduceMotion).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
-            Card(
-              color: completed ? _gold.withValues(alpha: 0.08) : color.withValues(alpha: 0.12),
-              child: Padding(
-                padding: const EdgeInsets.all(22),
-                child: Row(
-                  children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        AnimatedProgressRing(
-                          progress: progress,
-                          size: 96,
-                          strokeWidth: 9,
-                          color: ringColor,
-                          animate: !reduceMotion,
-                          center: goal.imageUrl != null && goal.imageUrl!.isNotEmpty
-                              ? ClipOval(
-                                  child: GoalImage(
-                                    imageUrl: goal.imageUrl,
-                                    width: 72,
-                                    height: 72,
-                                    fit: BoxFit.cover,
-                                    fallback: Icon(icon, color: ringColor, size: 34),
-                                  ),
-                                )
-                              : completed
-                                  ? Icon(Icons.check_rounded, color: _gold, size: 40)
-                                  : Icon(icon, color: color, size: 38),
-                        ),
-                        if (completed)
-                          Positioned(
-                            right: -3,
-                            bottom: -3,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: _gold,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface, width: 3),
-                              ),
-                              child: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+
+            // ── Stats card ──
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: ringColor.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Card(
+                color: completed ? _gold.withValues(alpha: 0.1) : color.withValues(alpha: 0.18),
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(22),
+                  child: Row(
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
                         children: [
-                          CountUpText(
-                            value: goal.savedAmount,
+                          AnimatedProgressRing(
+                            progress: progress,
+                            size: 96,
+                            strokeWidth: 9,
+                            color: ringColor,
                             animate: !reduceMotion,
-                            format: (v) => formatCurrency(v, currency),
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: ringColor,
+                            center: goal.imageUrl != null && goal.imageUrl!.isNotEmpty
+                                ? ClipOval(
+                                    child: GoalImage(
+                                      imageUrl: goal.imageUrl,
+                                      width: 72,
+                                      height: 72,
+                                      fit: BoxFit.cover,
+                                      fallback: Icon(icon, color: ringColor, size: 34),
+                                    ),
+                                  )
+                                : completed
+                                    ? Icon(Icons.check_rounded, color: _gold, size: 40)
+                                    : Icon(icon, color: color, size: 38),
+                          ),
+                          if (completed)
+                            Positioned(
+                              right: -3,
+                              bottom: -3,
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: _gold,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+                                    width: 3,
+                                  ),
                                 ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'of ${formatCurrency(goal.targetAmount, currency)}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            completed ? 'Completed!' : '${(progress * 100).toInt()}% complete',
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                  color: ringColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          if (goal.deadline != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'by ${goal.deadline!.day}/${goal.deadline!.month}/${goal.deadline!.year}',
-                                style: Theme.of(context).textTheme.bodySmall,
+                                child: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
                               ),
                             ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 18),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CountUpText(
+                              value: goal.savedAmount,
+                              animate: !reduceMotion,
+                              format: (v) => formatCurrency(v, currency),
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: ringColor,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'of ${formatCurrency(goal.targetAmount, currency)}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 6,
+                                backgroundColor: ringColor.withValues(alpha: 0.2),
+                                valueColor: AlwaysStoppedAnimation(ringColor),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Text(
+                                  completed ? 'Completed!' : '${(progress * 100).toInt()}% complete',
+                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: ringColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (goal.deadline != null)
+                                  Text(
+                                    'by ${goal.deadline!.day}/${goal.deadline!.month}/${goal.deadline!.year}',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+
+            // ── Action buttons ──
             if (!completed)
               Row(
                 children: [
                   Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => showTransactionSheet(context, goal),
-                      icon: const Icon(Icons.add_rounded),
-                      label: const Text('Deposit'),
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [color, HSLColor.fromAHSL(
+                            1.0,
+                            (HSLColor.fromColor(color).hue + 20) % 360,
+                            (HSLColor.fromColor(color).saturation * 0.85).clamp(0.0, 1.0),
+                            0.48,
+                          ).toColor()],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: FilledButton.icon(
+                        onPressed: () => showTransactionSheet(context, goal),
+                        icon: const Icon(Icons.add_rounded, color: Colors.white),
+                        label: const Text('Deposit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => showTransactionSheet(context, goal, initialType: 'withdrawal'),
-                      icon: const Icon(Icons.remove_rounded),
-                      label: const Text('Withdraw'),
+                    child: SizedBox(
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        onPressed: () => showTransactionSheet(context, goal, initialType: 'withdrawal'),
+                        icon: const Icon(Icons.remove_rounded),
+                        label: const Text('Withdraw', style: TextStyle(fontWeight: FontWeight.w600)),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            if (!completed) const SizedBox(height: 20),
+            if (!completed) const SizedBox(height: 24),
             Text(
               'Transactions',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -286,9 +388,35 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
               error: (e, _) => Text('Error: $e'),
               data: (txs) {
                 if (txs.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: Text('No transactions yet.')),
+                  return Container(
+                    padding: const EdgeInsets.all(40),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.receipt_long_rounded,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No transactions yet',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Make a deposit to get started',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                              ),
+                        ),
+                      ],
+                    ),
                   );
                 }
 
@@ -303,24 +431,30 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
-                      onChanged: (v) => setState(() => _searchQuery = v),
-                      decoration: InputDecoration(
-                        hintText: 'Search transactions...',
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded),
-                                onPressed: () => setState(() => _searchQuery = ''),
-                              )
-                            : null,
-                        isDense: true,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: TextField(
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        decoration: InputDecoration(
+                          hintText: 'Search transactions...',
+                          prefixIcon: const Icon(Icons.search_rounded, size: 22),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.close_rounded, size: 18),
+                                  onPressed: () => setState(() => _searchQuery = ''),
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
-                      height: 34,
+                      height: 36,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
@@ -330,13 +464,17 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                               label: const Text('All'),
                               selected: _selectedCategory == null,
                               onSelected: (_) => setState(() => _selectedCategory = null),
+                              showCheckmark: false,
                               selectedColor: color,
                               checkmarkColor: Colors.white,
                               labelStyle: TextStyle(
                                 color: _selectedCategory == null ? Colors.white : null,
                                 fontSize: 12,
+                                fontWeight: _selectedCategory == null ? FontWeight.w600 : FontWeight.normal,
                               ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
                             ),
                           ),
                           for (final cat in GoalOptions.categories)
@@ -346,44 +484,60 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
                                 label: Text(cat.name),
                                 selected: _selectedCategory == cat.name,
                                 onSelected: (_) => setState(() => _selectedCategory = cat.name),
+                                showCheckmark: false,
                                 avatar: Icon(cat.icon, size: 16, color: _selectedCategory == cat.name ? Colors.white : cat.color),
                                 selectedColor: cat.color,
                                 checkmarkColor: Colors.white,
                                 labelStyle: TextStyle(
                                   color: _selectedCategory == cat.name ? Colors.white : null,
                                   fontSize: 12,
+                                  fontWeight: _selectedCategory == cat.name ? FontWeight.w600 : FontWeight.normal,
                                 ),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
                               ),
                             ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 10),
                     if (filtered.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _searchQuery.isNotEmpty || _selectedCategory != null
-                                    ? Icons.search_off_rounded
-                                    : Icons.receipt_long_rounded,
-                                size: 40,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _searchQuery.isNotEmpty || _selectedCategory != null
-                                    ? 'No matching transactions'
-                                    : 'No transactions yet',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: Theme.of(context).colorScheme.outline,
-                                    ),
-                              ),
-                            ],
-                          ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(40),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              _searchQuery.isNotEmpty || _selectedCategory != null
+                                  ? Icons.search_off_rounded
+                                  : Icons.receipt_long_rounded,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _searchQuery.isNotEmpty || _selectedCategory != null
+                                  ? 'No matching transactions'
+                                  : 'No transactions yet',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _searchQuery.isNotEmpty || _selectedCategory != null
+                                  ? 'Try a different search'
+                                  : 'Make a deposit to get started',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                  ),
+                            ),
+                          ],
                         ),
                       )
                     else
@@ -452,24 +606,41 @@ class _TransactionTile extends ConsumerWidget {
           await appDatabase.applyTransaction(goal.id, transaction.amount, isDeposit ? 'withdrawal' : 'deposit');
         }
       },
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(14),
+        ),
         child: ListTile(
           onTap: () => showTransactionSheet(context, goal, transaction: transaction),
-          leading: CircleAvatar(
-            backgroundColor: cat.color.withValues(alpha: 0.15),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: cat.color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
             child: Icon(cat.icon, color: cat.color, size: 20),
           ),
           title: Text(transaction.category),
           subtitle: Text(
             '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}'
-            '${transaction.note.isNotEmpty ? ' • ${transaction.note}' : ''}',
+            '${transaction.note.isNotEmpty ? ' \u2022 ${transaction.note}' : ''}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: Text(
-            '${isDeposit ? '+' : '-'}${formatCurrency(transaction.amount, currency).replaceAll('-', '')}',
-            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '${isDeposit ? '+' : '-'}${formatCurrency(transaction.amount, currency).replaceAll('-', '')}',
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
           ),
         ),
       ),

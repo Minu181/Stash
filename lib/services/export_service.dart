@@ -62,7 +62,7 @@ class ExportService {
               currency: Value(s['currency'] as String? ?? 'USD'),
               reduceMotion: Value(s['reduceMotion'] as bool? ?? false),
               language: Value(s['language'] as String? ?? 'en'),
-              themeId: Value(s['themeId'] as String? ?? 'aurora'),
+              themeId: Value(s['themeId'] as String? ?? 'indigo'),
               displayName: Value(s['displayName'] as String?),
               hasOnboarded: Value(s['hasOnboarded'] as bool? ?? false),
             ),

@@ -192,11 +192,16 @@ Widget slideFadeIn({
               ? const Offset(0.25, 0)
               : const Offset(-0.25, 0);
   return child.animate().fadeIn(
-        duration: const Duration(milliseconds: 450),
+        duration: const Duration(milliseconds: 500),
         delay: Duration(milliseconds: 60 * index),
       ).slide(
         begin: offset,
-        duration: const Duration(milliseconds: 450),
+        duration: const Duration(milliseconds: 500),
+        delay: Duration(milliseconds: 60 * index),
+        curve: Curves.easeOutCubic,
+      ).scale(
+        begin: const Offset(0.96, 0.96),
+        duration: const Duration(milliseconds: 500),
         delay: Duration(milliseconds: 60 * index),
         curve: Curves.easeOutCubic,
       );

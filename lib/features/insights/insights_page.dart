@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -32,12 +33,15 @@ class InsightsPage extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Error: $e')),
           data: (txs) {
-            if (goals.isEmpty) {
-              return _EmptyInsights(reduceMotion: reduceMotion);
-            }
+            if (goals.isEmpty) return _EmptyInsights(reduceMotion: reduceMotion);
+
             final total = goals.fold<double>(0, (s, g) => s + g.savedAmount);
             final target = goals.fold<double>(0, (s, g) => s + g.targetAmount);
             final overall = (target > 0 ? total / target : 0.0).clamp(0.0, 1.0).toDouble();
+            final completed = goals.where((g) => g.targetAmount > 0 && g.savedAmount >= g.targetAmount).length;
+            final deposits = txs.where((t) => t.type == 'deposit').fold<double>(0, (s, t) => s + t.amount);
+            final withdrawals = txs.where((t) => t.type == 'withdrawal').fold<double>(0, (s, t) => s + t.amount);
+
             return RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(goalsProvider);
@@ -45,73 +49,53 @@ class InsightsPage extends ConsumerWidget {
                 await Future.delayed(const Duration(milliseconds: 500));
               },
               child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              children: [
-                EnterTransition(
-                  animate: !reduceMotion,
-                  child: GradientContainer(
-                    borderRadius: BorderRadius.circular(22),
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Current Total Savings',
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.85),
-                              ),
-                        ),
-                        const SizedBox(height: 6),
-                        CountUpText(
-                          value: total,
-                          animate: !reduceMotion,
-                          format: (v) => formatCurrency(v, currency),
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: overall,
-                            minHeight: 8,
-                            color: Colors.white,
-                            backgroundColor: Colors.white.withValues(alpha: 0.25),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${(overall * 100).toInt()}% of ${formatCurrency(target, currency)}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.85),
-                              ),
-                        ),
-                      ],
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [
+                  // ── Hero card ──
+                  EnterTransition(
+                    animate: !reduceMotion,
+                    child: _HeroCard(total: total, target: target, overall: overall, currency: currency),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Quick stats ──
+                  slideFadeIn(
+                    index: 1,
+                    animate: !reduceMotion,
+                    child: _QuickStats(
+                      goalsCount: goals.length,
+                      completed: completed,
+                      txCount: txs.length,
+                      net: deposits - withdrawals,
+                      currency: currency,
                     ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                slideFadeIn(
-                  index: 1,
-                  animate: !reduceMotion,
-                  child: _SavingsChart(txs: txs, currency: currency, animate: !reduceMotion),
-                ),
-                const SizedBox(height: 18),
-                slideFadeIn(
-                  index: 2,
-                  animate: !reduceMotion,
-                  child: _GoalBreakdown(goals: goals, currency: currency, animate: !reduceMotion),
-                ),
-                const SizedBox(height: 18),
-                slideFadeIn(
-                  index: 3,
-                  animate: !reduceMotion,
-                  child: _CategoryChart(txs: txs, currency: currency, animate: !reduceMotion),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 16),
+
+                  // ── Savings chart ──
+                  slideFadeIn(
+                    index: 2,
+                    animate: !reduceMotion,
+                    child: _SavingsChart(txs: txs, currency: currency, animate: !reduceMotion),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Goal breakdown ──
+                  slideFadeIn(
+                    index: 3,
+                    animate: !reduceMotion,
+                    child: _GoalBreakdown(goals: goals, total: total, currency: currency, animate: !reduceMotion),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Category spending ──
+                  slideFadeIn(
+                    index: 4,
+                    animate: !reduceMotion,
+                    child: _CategoryDonut(txs: txs, currency: currency),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -119,6 +103,10 @@ class InsightsPage extends ConsumerWidget {
     );
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Empty state
+// ══════════════════════════════════════════════════════════════════════════════
 
 class _EmptyInsights extends StatelessWidget {
   final bool reduceMotion;
@@ -136,10 +124,7 @@ class _EmptyInsights extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: cs.primaryContainer,
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: cs.primaryContainer),
               child: Icon(Icons.insights_rounded, size: 40, color: cs.primary),
             )
                 .animate(autoPlay: !reduceMotion)
@@ -147,17 +132,12 @@ class _EmptyInsights extends StatelessWidget {
                 .then(delay: 200.ms)
                 .shimmer(duration: 800.ms, color: cs.primary.withValues(alpha: 0.15)),
             const SizedBox(height: 20),
-            Text(
-              'No data yet',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
+            Text('No data yet', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(
               'Add goals and transactions to see your savings insights here.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: cs.outline,
-                  ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.outline),
             ),
           ],
         ),
@@ -166,15 +146,189 @@ class _EmptyInsights extends StatelessWidget {
   }
 }
 
-// --- Combined Savings Chart with Time Range Selector ---
+// ══════════════════════════════════════════════════════════════════════════════
+// Hero card — total savings + progress ring
+// ══════════════════════════════════════════════════════════════════════════════
+
+class _HeroCard extends StatelessWidget {
+  final double total;
+  final double target;
+  final double overall;
+  final String currency;
+
+  const _HeroCard({required this.total, required this.target, required this.overall, required this.currency});
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientContainer(
+      borderRadius: BorderRadius.circular(24),
+      padding: const EdgeInsets.all(22),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total Saved',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                CountUpText(
+                  value: total,
+                  animate: true,
+                  format: (v) => formatCurrency(v, currency),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: overall,
+                    minHeight: 6,
+                    color: Colors.white,
+                    backgroundColor: Colors.white.withValues(alpha: 0.25),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${(overall * 100).toInt()}% of ${formatCurrency(target, currency)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.8)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 18),
+          AnimatedProgressRing(
+            progress: overall,
+            size: 80,
+            strokeWidth: 8,
+            color: Colors.white,
+            animate: true,
+            center: Text(
+              '${(overall * 100).toInt()}%',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Quick stats row
+// ══════════════════════════════════════════════════════════════════════════════
+
+class _QuickStats extends StatelessWidget {
+  final int goalsCount;
+  final int completed;
+  final int txCount;
+  final double net;
+  final String currency;
+
+  const _QuickStats({
+    required this.goalsCount,
+    required this.completed,
+    required this.txCount,
+    required this.net,
+    required this.currency,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        _StatTile(
+          icon: Icons.savings_rounded,
+          label: 'Goals',
+          value: '$goalsCount',
+          color: cs.primary,
+          detail: '$completed done',
+        ),
+        const SizedBox(width: 10),
+        _StatTile(
+          icon: Icons.receipt_long_rounded,
+          label: 'Transactions',
+          value: '$txCount',
+          color: cs.tertiary,
+        ),
+        const SizedBox(width: 10),
+        _StatTile(
+          icon: net >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+          label: 'Net',
+          value: formatCurrency(net, currency),
+          color: net >= 0 ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final String? detail;
+
+  const _StatTile({required this.icon, required this.label, required this.value, required this.color, this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: color),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.outline)),
+            if (detail != null)
+              Text(
+                detail!,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10, color: Theme.of(context).colorScheme.outline),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Savings line chart
+// ══════════════════════════════════════════════════════════════════════════════
 
 class _SavingsChart extends StatefulWidget {
   final List<Transaction> txs;
   final String currency;
   final bool animate;
-
   const _SavingsChart({required this.txs, required this.currency, required this.animate});
-
   @override
   State<_SavingsChart> createState() => _SavingsChartState();
 }
@@ -198,7 +352,7 @@ class _SavingsChartState extends State<_SavingsChart> {
     if (index < 0 || index >= buckets.length) return '';
     final d = buckets[index];
     return switch (_range) {
-      _TimeRange.week => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][d.weekday - 1],
+      _TimeRange.week => ['M', 'T', 'W', 'T', 'F', 'S', 'S'][d.weekday - 1],
       _TimeRange.month => '${d.day}',
       _TimeRange.threeMonths || _TimeRange.sixMonths => '${d.month}/${d.year.toString().substring(2)}',
       _TimeRange.year => switch (d.month) {
@@ -218,7 +372,6 @@ class _SavingsChartState extends State<_SavingsChart> {
     if (_range == _TimeRange.year) {
       return List.generate(12, (i) => DateTime(now.year, now.month - (11 - i), 1));
     }
-    // Month / 3M / 6M → bucket by week
     final days = now.difference(start).inDays + 1;
     final weeks = (days / 7).ceil().clamp(1, 26);
     return List.generate(weeks, (i) {
@@ -237,7 +390,6 @@ class _SavingsChartState extends State<_SavingsChart> {
 
     for (final t in widget.txs) {
       if (t.date.isBefore(start)) continue;
-      // Find which bucket this falls into
       int idx = buckets.length - 1;
       for (var i = 0; i < buckets.length; i++) {
         final next = i + 1 < buckets.length ? buckets[i + 1] : DateTime.now();
@@ -269,207 +421,260 @@ class _SavingsChartState extends State<_SavingsChart> {
     final maxVal = spots.fold<double>(0, (m, s) => s.y > m ? s.y : m);
     final minVal = spots.fold<double>(0, (m, s) => s.y < m ? s.y : m);
     final needsNegativeAxis = minVal < 0;
+    final lineColor = _showCumulative ? const Color(0xFF16A34A) : cs.primary;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.trending_up_rounded, size: 20, color: cs.primary),
-                const SizedBox(width: 8),
-                Text(_showCumulative ? 'Savings over time' : 'Net savings',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => setState(() => _showCumulative = !_showCumulative),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _showCumulative ? 'Cumulative' : 'Per period',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.onPrimaryContainer),
-                    ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: lineColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.show_chart_rounded, size: 18, color: lineColor),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _showCumulative ? 'Cumulative Savings' : 'Net per Period',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _showCumulative = !_showCumulative),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: lineColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _showCumulative ? 'Cumulative' : 'Per period',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: lineColor, fontWeight: FontWeight.w600),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Time range selector
-            SizedBox(
-              height: 34,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _TimeRange.values.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
-                itemBuilder: (context, index) {
-                  final r = _TimeRange.values[index];
-                  final selected = _range == r;
-                  final label = switch (r) {
-                    _TimeRange.week => '1W',
-                    _TimeRange.month => '1M',
-                    _TimeRange.threeMonths => '3M',
-                    _TimeRange.sixMonths => '6M',
-                    _TimeRange.year => '1Y',
-                  };
-                  return GestureDetector(
-                    onTap: () => setState(() => _range = r),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: selected ? cs.primary : cs.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: selected ? cs.onPrimary : cs.onSurface,
-                        ),
-                      ),
-                    ),
-                  );
-                },
               ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Time range selector
+          SizedBox(
+            height: 32,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _TimeRange.values.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (context, index) {
+                final r = _TimeRange.values[index];
+                final selected = _range == r;
+                final label = switch (r) {
+                  _TimeRange.week => '1W',
+                  _TimeRange.month => '1M',
+                  _TimeRange.threeMonths => '3M',
+                  _TimeRange.sixMonths => '6M',
+                  _TimeRange.year => '1Y',
+                };
+                return GestureDetector(
+                  onTap: () => setState(() => _range = r),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: selected ? cs.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: selected ? null : Border.all(color: cs.outlineVariant, width: 1),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: selected ? cs.onPrimary : cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: spots.isEmpty
-                  ? Center(
-                      child: Text('No data in this range',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.outline)),
-                    )
-                  : LineChart(
-                      LineChartData(
-                        minY: needsNegativeAxis ? minVal * 1.2 : null,
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: spots,
-                            isCurved: true,
-                            curveSmoothness: 0.35,
-                            barWidth: 3,
-                            color: _showCumulative ? Colors.green : cs.primary,
-                            dotData: FlDotData(
-                              show: spots.length <= 12,
-                              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
-                                radius: 3,
-                                color: _showCumulative ? Colors.green : cs.primary,
-                                strokeColor: Colors.white,
-                                strokeWidth: 2,
+          ),
+          const SizedBox(height: 16),
+
+          // Chart
+          SizedBox(
+            height: 200,
+            child: spots.isEmpty
+                ? Center(
+                    child: Text('No data in this range',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.outline)),
+                  )
+                : LineChart(
+                    LineChartData(
+                      minY: needsNegativeAxis ? minVal * 1.2 : null,
+                      lineTouchData: LineTouchData(
+                        enabled: true,
+                        handleBuiltInTouches: true,
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipColor: (_) => cs.inverseSurface,
+                          tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          getTooltipItems: (touched) => touched.map((t) {
+                            return LineTooltipItem(
+                              formatCurrency(t.y, widget.currency),
+                              TextStyle(
+                                color: cs.onInverseSurface,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
                               ),
-                            ),
-                            belowBarData: BarAreaData(
+                            );
+                          }).toList(),
+                        ),
+                        getTouchedSpotIndicator: (data, spots) => spots.map((s) {
+                          return TouchedSpotIndicatorData(
+                            FlLine(color: lineColor.withValues(alpha: 0.3), strokeWidth: 1, dashArray: [4, 4]),
+                            FlDotData(
                               show: true,
-                              gradient: LinearGradient(
-                                colors: [
-                                  (_showCumulative ? Colors.green : cs.primary).withValues(alpha: 0.25),
-                                  (_showCumulative ? Colors.green : cs.primary).withValues(alpha: 0.02),
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
+                              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+                                radius: 5,
+                                color: lineColor,
+                                strokeColor: cs.surface,
+                                strokeWidth: 2.5,
                               ),
                             ),
-                          ),
-                        ],
-                        titlesData: FlTitlesData(
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 28,
-                              getTitlesWidget: (v, _) {
-                                final idx = v.toInt();
-                                if (idx < 0 || idx >= buckets.length) return const SizedBox();
-                                // Show fewer labels if too many buckets
-                                final step = (buckets.length / 6).ceil();
-                                if (idx % step != 0 && idx != buckets.length - 1) return const SizedBox();
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(_labelForSpot(idx, buckets),
-                                      style: Theme.of(context).textTheme.labelSmall),
-                                );
-                              },
+                          );
+                        }).toList(),
+                      ),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          curveSmoothness: 0.35,
+                          barWidth: 3,
+                          color: lineColor,
+                          dotData: FlDotData(
+                            show: spots.length <= 12,
+                            getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                              radius: 3,
+                              color: lineColor,
+                              strokeColor: Colors.white,
+                              strokeWidth: 2,
                             ),
                           ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: needsNegativeAxis,
-                              reservedSize: 40,
-                              getTitlesWidget: (v, _) {
-                                if (v == 0) return const SizedBox();
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 4),
-                                  child: Text(formatCurrency(v, widget.currency),
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9)),
-                                );
-                              },
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              colors: [
+                                lineColor.withValues(alpha: 0.25),
+                                lineColor.withValues(alpha: 0.02),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
                           ),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         ),
-                        gridData: FlGridData(
-                          show: needsNegativeAxis,
-                          drawVerticalLine: false,
-                          horizontalInterval: (maxVal - minVal).abs() / 4,
-                          getDrawingHorizontalLine: (v) => FlLine(
-                            color: v == 0 ? cs.outlineVariant : cs.outlineVariant.withValues(alpha: 0.3),
-                            strokeWidth: v == 0 ? 1.5 : 0.5,
-                          ),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        lineTouchData: LineTouchData(
-                          enabled: true,
-                          touchTooltipData: LineTouchTooltipData(
-                            getTooltipItems: (touched) => touched.map((t) {
-                              return LineTooltipItem(
-                                formatCurrency(t.y, widget.currency),
-                                TextStyle(
-                                  color: cs.onSurface,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
+                      ],
+                      titlesData: FlTitlesData(
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 28,
+                            getTitlesWidget: (v, _) {
+                              final idx = v.toInt();
+                              if (idx < 0 || idx >= buckets.length) return const SizedBox();
+                              final step = (buckets.length / 6).ceil();
+                              if (idx % step != 0 && idx != buckets.length - 1) return const SizedBox();
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(_labelForSpot(idx, buckets),
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10)),
                               );
-                            }).toList(),
+                            },
                           ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: needsNegativeAxis,
+                            reservedSize: 44,
+                            getTitlesWidget: (v, _) {
+                              if (v == 0) return const SizedBox();
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Text(formatCurrency(v, widget.currency),
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9)),
+                              );
+                            },
+                          ),
+                        ),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: maxVal > 0 ? maxVal / 4 : 1,
+                        getDrawingHorizontalLine: (v) => FlLine(
+                          color: cs.outlineVariant.withValues(alpha: 0.3),
+                          strokeWidth: 0.5,
+                          dashArray: [4, 4],
                         ),
                       ),
-                      duration: widget.animate ? const Duration(milliseconds: 600) : Duration.zero,
-                      curve: Curves.easeOutCubic,
+                      borderData: FlBorderData(show: false),
                     ),
-            ),
-            // Summary row
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _summaryChip(context, 'Deposits',
-                    formatCurrency(deposits.fold(0.0, (a, b) => a + b), widget.currency), Colors.green),
-                const SizedBox(width: 12),
-                _summaryChip(context, 'Withdrawals',
-                    formatCurrency(withdrawals.fold(0.0, (a, b) => a + b), widget.currency), Colors.red),
-                const SizedBox(width: 12),
-                _summaryChip(context, 'Net',
-                    formatCurrency(
-                        deposits.fold(0.0, (a, b) => a + b) - withdrawals.fold(0.0, (a, b) => a + b),
-                        widget.currency),
-                    cs.primary),
-              ],
-            ),
-          ],
-        ),
+                    duration: widget.animate ? const Duration(milliseconds: 600) : Duration.zero,
+                    curve: Curves.easeOutCubic,
+                  ),
+          ),
+
+          // Summary chips
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _SummaryChip(
+                label: 'Deposits',
+                value: formatCurrency(deposits.fold(0.0, (a, b) => a + b), widget.currency),
+                color: const Color(0xFF16A34A),
+              ),
+              const SizedBox(width: 8),
+              _SummaryChip(
+                label: 'Withdrawals',
+                value: formatCurrency(withdrawals.fold(0.0, (a, b) => a + b), widget.currency),
+                color: const Color(0xFFDC2626),
+              ),
+              const SizedBox(width: 8),
+              _SummaryChip(
+                label: 'Net',
+                value: formatCurrency(
+                    deposits.fold(0.0, (a, b) => a + b) - withdrawals.fold(0.0, (a, b) => a + b),
+                    widget.currency),
+                color: lineColor,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _summaryChip(BuildContext context, String label, String value, Color color) {
+class _SummaryChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _SummaryChip({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -480,7 +685,7 @@ class _SavingsChartState extends State<_SavingsChart> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color)),
+            Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontSize: 10)),
             const SizedBox(height: 2),
             Text(value,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -492,47 +697,52 @@ class _SavingsChartState extends State<_SavingsChart> {
   }
 }
 
-// --- Goal Breakdown (horizontal bar list) ---
+// ══════════════════════════════════════════════════════════════════════════════
+// Goal breakdown (horizontal bars)
+// ══════════════════════════════════════════════════════════════════════════════
 
 class _GoalBreakdown extends StatelessWidget {
   final List<Goal> goals;
+  final double total;
   final String currency;
   final bool animate;
-
-  const _GoalBreakdown({required this.goals, required this.currency, required this.animate});
+  const _GoalBreakdown({required this.goals, required this.total, required this.currency, required this.animate});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final total = goals.fold<double>(0, (s, g) => s + g.savedAmount);
     final sorted = List<Goal>.from(goals)..sort((a, b) => b.savedAmount.compareTo(a.savedAmount));
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.pie_chart_rounded, size: 20, color: cs.primary),
-                const SizedBox(width: 8),
-                Text('Saved by goal', style: Theme.of(context).textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 16),
-            for (var i = 0; i < sorted.length; i++) ...[
-              _GoalBar(
-                goal: sorted[i],
-                total: total,
-                currency: currency,
-                animate: animate,
-                index: i,
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.pie_chart_rounded, size: 18, color: cs.primary),
               ),
-              if (i < sorted.length - 1) const SizedBox(height: 12),
+              const SizedBox(width: 10),
+              Text('Saved by Goal', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
             ],
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < sorted.length; i++) ...[
+            _GoalBar(goal: sorted[i], total: total, currency: currency, index: i),
+            if (i < sorted.length - 1) const SizedBox(height: 14),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -542,16 +752,8 @@ class _GoalBar extends StatelessWidget {
   final Goal goal;
   final double total;
   final String currency;
-  final bool animate;
   final int index;
-
-  const _GoalBar({
-    required this.goal,
-    required this.total,
-    required this.currency,
-    required this.animate,
-    required this.index,
-  });
+  const _GoalBar({required this.goal, required this.total, required this.currency, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -560,6 +762,7 @@ class _GoalBar extends StatelessWidget {
     final goalPct = goal.targetAmount > 0
         ? (goal.savedAmount / goal.targetAmount).clamp(0.0, 1.0)
         : 0.0;
+    final completed = goalPct >= 1.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,32 +787,34 @@ class _GoalBar extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
+            if (completed)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9A825).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('Done', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFFF9A825))),
+              ),
+            const SizedBox(width: 6),
             Text(
               formatCurrency(goal.savedAmount, currency),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(width: 6),
-            Text(
-              '${(pct * 100).toInt()}%',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.outline),
-            ),
           ],
         ),
         const SizedBox(height: 6),
-        // Two-layer progress bar: outer = share of total, inner = goal progress
         Stack(
           children: [
-              // Background: total share
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: pct,
-                  minHeight: 10,
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  color: color.withValues(alpha: 0.25),
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: pct,
+                minHeight: 10,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                color: color.withValues(alpha: 0.25),
               ),
-            // Foreground: goal progress
+            ),
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: LinearProgressIndicator(
@@ -621,115 +826,191 @@ class _GoalBar extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 2),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            '${(goalPct * 100).toInt()}% of goal · ${(pct * 100).toInt()}% of total',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 10,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-          ),
+        const SizedBox(height: 3),
+        Row(
+          children: [
+            Text(
+              '${(goalPct * 100).toInt()}% of goal',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${(pct * 100).toInt()}% of total',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-// --- Category Chart (withdrawals only = spending) ---
+// ══════════════════════════════════════════════════════════════════════════════
+// Category donut chart
+// ══════════════════════════════════════════════════════════════════════════════
 
-class _CategoryChart extends StatelessWidget {
+class _CategoryDonut extends StatelessWidget {
   final List<Transaction> txs;
   final String currency;
-  final bool animate;
-
-  const _CategoryChart({required this.txs, required this.currency, required this.animate});
+  const _CategoryDonut({required this.txs, required this.currency});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final spending = <String, double>{};
-    final income = <String, double>{};
-
     for (final t in txs) {
       if (t.type == 'withdrawal') {
         spending[t.category] = (spending[t.category] ?? 0) + t.amount;
-      } else {
-        income[t.category] = (income[t.category] ?? 0) + t.amount;
       }
     }
 
-    final sortedSpending = spending.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    final top = sortedSpending.take(8).toList();
-    final maxVal = top.isNotEmpty ? top.first.value : 1.0;
+    final sorted = spending.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final top = sorted.take(6).toList();
+    final totalSpending = spending.values.fold<double>(0, (a, b) => a + b);
 
-    return Card(
-      child: Padding(
+    if (top.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(22),
+        ),
         padding: const EdgeInsets.all(18),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long_rounded, size: 20, color: cs.primary),
-                const SizedBox(width: 8),
-                Text('Spending by category', style: Theme.of(context).textTheme.titleMedium),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: cs.tertiary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.donut_large_rounded, size: 18, color: cs.tertiary),
+                ),
+                const SizedBox(width: 10),
+                Text('Spending Breakdown', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Withdrawals only',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.outline),
-            ),
-            const SizedBox(height: 14),
-            if (top.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Center(
-                  child: Text('No withdrawals yet',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.outline)),
-                ),
-              )
-            else
-              ...top.map((entry) {
-                final cat = GoalOptions.categoryByName(entry.key);
-                final fraction = maxVal > 0 ? entry.value / maxVal : 0.0;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(cat.icon, size: 16, color: cat.color),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(entry.key,
-                                style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
-                          ),
-                          Text(
-                            formatCurrency(entry.value, currency),
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: fraction,
-                          minHeight: 6,
-                          color: cat.color,
-                          backgroundColor: cat.color.withValues(alpha: 0.12),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+            const SizedBox(height: 24),
+            Icon(Icons.receipt_long_rounded, size: 40, color: cs.outline.withValues(alpha: 0.4)),
+            const SizedBox(height: 12),
+            Text('No withdrawals yet', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.outline)),
           ],
         ),
+      );
+    }
+
+    final colors = top.map((e) => GoalOptions.categoryByName(e.key).color).toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: cs.tertiary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.donut_large_rounded, size: 18, color: cs.tertiary),
+              ),
+              const SizedBox(width: 10),
+              Text('Spending Breakdown', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 180,
+            child: Row(
+              children: [
+                // Donut
+                Expanded(
+                  flex: 2,
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 3,
+                      centerSpaceRadius: 36,
+                      startDegreeOffset: -90,
+                      sections: [
+                        for (var i = 0; i < top.length; i++)
+                          PieChartSectionData(
+                            value: top[i].value,
+                            color: colors[i],
+                            radius: 22,
+                            title: '${((top[i].value / totalSpending) * 100).toInt()}%',
+                            titleStyle: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                      ],
+                    ),
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Legend
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < top.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: colors[i],
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  top[i].key,
+                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                formatCurrency(top[i].value, currency),
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: colors[i],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

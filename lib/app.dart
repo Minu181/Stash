@@ -8,6 +8,7 @@ import 'package:stash/features/home/home_page.dart';
 import 'package:stash/features/goals/goals_page.dart';
 import 'package:stash/features/insights/insights_page.dart';
 import 'package:stash/features/settings/settings_page.dart';
+import 'package:stash/features/settings/theme_page.dart';
 import 'package:stash/features/goals/goal_detail_page.dart';
 import 'package:stash/features/goals/goal_form_page.dart';
 import 'package:stash/features/onboarding/splash_screen.dart';
@@ -26,16 +27,19 @@ CustomTransitionPage _fadeSlidePage(GoRouterState state, Widget child) {
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
-    transitionDuration: const Duration(milliseconds: 350),
+    transitionDuration: const Duration(milliseconds: 400),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return FadeTransition(
         opacity: animation,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.08),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-          child: child,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.97, end: 1.0).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.05),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            child: child,
+          ),
         ),
       );
     },
@@ -124,6 +128,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const UpdatePage(),
       ),
+      GoRoute(
+        path: '/theme',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ThemePage(),
+      ),
     ],
     redirect: (context, state) {
       final isOnSplash = state.matchedLocation == '/splash';
@@ -151,10 +160,10 @@ class AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<AppShell> {
   static const _destinations = [
-    NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
-    NavigationDestination(icon: Icon(Icons.savings_rounded), label: 'Goals'),
-    NavigationDestination(icon: Icon(Icons.insights_rounded), label: 'Insights'),
-    NavigationDestination(icon: Icon(Icons.settings_rounded), label: 'Settings'),
+    _NavDestination(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
+    _NavDestination(icon: Icons.savings_outlined, activeIcon: Icons.savings_rounded, label: 'Goals'),
+    _NavDestination(icon: Icons.insights_outlined, activeIcon: Icons.insights_rounded, label: 'Insights'),
+    _NavDestination(icon: Icons.settings_outlined, activeIcon: Icons.settings_rounded, label: 'Settings'),
   ];
 
   @override
@@ -185,30 +194,266 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     final reduceMotion = ref.watch(settingsProvider).reduceMotion;
+    final cs = Theme.of(context).colorScheme;
+    final selectedIndex = widget.navigationShell.currentIndex;
+
     return Scaffold(
       body: widget.navigationShell,
-      floatingActionButton: GradientFAB(
-        tooltip: 'New goal',
-        onPressed: () => context.push('/goal/new'),
-      ).animate(autoPlay: !reduceMotion).scale(duration: const Duration(milliseconds: 250), curve: Curves.easeOutBack),
+      floatingActionButton: selectedIndex < 2
+          ? GradientFAB(
+              tooltip: 'New goal',
+              onPressed: () => context.push('/goal/new'),
+            ).animate(autoPlay: !reduceMotion).scale(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
+                begin: const Offset(0.0, 0.0),
+                end: const Offset(1.0, 1.0),
+              ).fade(duration: const Duration(milliseconds: 200))
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
+      bottomNavigationBar: _CurvedNavBar(
+        destinations: _destinations,
+        selectedIndex: selectedIndex,
+        onTap: _onTap,
+        selectedColor: cs.primary,
+        surfaceColor: cs.surface,
+        unselectedColor: cs.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
+class _NavDestination {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _NavDestination({required this.icon, required this.activeIcon, required this.label});
+}
+
+// ── Custom curved bottom nav ────────────────────────────────────────────
+
+class _CurvedNavBar extends StatefulWidget {
+  final List<_NavDestination> destinations;
+  final int selectedIndex;
+  final ValueChanged<int> onTap;
+  final Color selectedColor;
+  final Color surfaceColor;
+  final Color unselectedColor;
+
+  const _CurvedNavBar({
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onTap,
+    required this.selectedColor,
+    required this.surfaceColor,
+    required this.unselectedColor,
+  });
+
+  @override
+  State<_CurvedNavBar> createState() => _CurvedNavBarState();
+}
+
+class _CurvedNavBarState extends State<_CurvedNavBar> {
+  final _itemKeys = <GlobalKey<State>>[];
+
+  @override
+  void initState() {
+    super.initState();
+    for (var i = 0; i < widget.destinations.length; i++) {
+      _itemKeys.add(GlobalKey());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _CurvedNavBar old) {
+    super.didUpdateWidget(old);
+    if (old.destinations.length != widget.destinations.length) {
+      _itemKeys.clear();
+      for (var i = 0; i < widget.destinations.length; i++) {
+        _itemKeys.add(GlobalKey());
+      }
+    }
+  }
+
+  Rect _getRect(int index) {
+    final key = _itemKeys[index];
+    final ctx = key.currentContext;
+    if (ctx == null) return Rect.zero;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null) return Rect.zero;
+    final pos = box.localToGlobal(Offset.zero);
+    return pos & box.size;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final curveH = 30.0;
+
+    return SizedBox(
+      height: 80 + curveH,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Shadow under curve
+          Positioned(
+            top: curveH - 4,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.selectedColor.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        child: NavigationBar(
-          selectedIndex: widget.navigationShell.currentIndex,
-          onDestinationSelected: _onTap,
-          destinations: _destinations,
-          elevation: 0,
-        ),
+          ),
+          // Curved background
+          Positioned.fill(
+            top: curveH,
+            child: CustomPaint(
+              painter: _NavBarPainter(
+                curveHeight: curveH,
+                backgroundColor: widget.surfaceColor,
+              ),
+            ),
+          ),
+
+          // Content row
+          Positioned(
+            top: curveH + 6,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Row(
+              children: List.generate(widget.destinations.length, (index) {
+                final dest = widget.destinations[index];
+                final isSelected = index == widget.selectedIndex;
+                return Expanded(
+                  key: _itemKeys[index],
+                  child: GestureDetector(
+                    onTap: () => widget.onTap(index),
+                    behavior: HitTestBehavior.opaque,
+                    child: _NavTile(
+                      destination: dest,
+                      isSelected: isSelected,
+                      selectedColor: widget.selectedColor,
+                      unselectedColor: widget.unselectedColor,
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Curved background painter ───────────────────────────────────────────
+
+class _NavBarPainter extends CustomPainter {
+  final double curveHeight;
+  final Color backgroundColor;
+
+  _NavBarPainter({required this.curveHeight, required this.backgroundColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, curveHeight)
+      ..quadraticBezierTo(
+        size.width / 2,
+        -curveHeight * 0.8,
+        size.width,
+        curveHeight,
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _NavBarPainter old) =>
+      old.curveHeight != curveHeight || old.backgroundColor != backgroundColor;
+}
+
+// ── Individual tile with animations ─────────────────────────────────────
+
+class _NavTile extends StatelessWidget {
+  final _NavDestination destination;
+  final bool isSelected;
+  final Color selectedColor;
+  final Color unselectedColor;
+
+  const _NavTile({
+    required this.destination,
+    required this.isSelected,
+    required this.selectedColor,
+    required this.unselectedColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon with animated scale + color
+          AnimatedScale(
+            scale: isSelected ? 1.15 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(scale: anim, child: child),
+              ),
+              child: Icon(
+                isSelected ? destination.activeIcon : destination.icon,
+                key: ValueKey('$isSelected'),
+                size: 24,
+                color: isSelected ? selectedColor : unselectedColor,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          // Label with animated opacity + slide
+          AnimatedSlide(
+            offset: isSelected ? Offset.zero : const Offset(0, 0.3),
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? selectedColor : unselectedColor,
+                letterSpacing: isSelected ? 0.3 : 0,
+              ),
+              child: Opacity(
+                opacity: isSelected ? 1.0 : 0.0,
+                child: Text(destination.label),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

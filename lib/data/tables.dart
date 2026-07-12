@@ -50,7 +50,7 @@ class AppSettings extends Table {
   TextColumn get currency => text().withDefault(const Constant('USD'))();
   BoolColumn get reduceMotion => boolean().withDefault(const Constant(false))();
   TextColumn get language => text().withDefault(const Constant('en'))();
-  TextColumn get themeId => text().withDefault(const Constant('aurora'))();
+  TextColumn get themeId => text().withDefault(const Constant('indigo'))();
   TextColumn get displayName => text().nullable()();
   BoolColumn get hasOnboarded => boolean().withDefault(const Constant(false))();
 }

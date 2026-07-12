@@ -23,7 +23,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   final _goalController = TextEditingController();
   String _currency = 'USD';
-  String _themeId = 'aurora';
+  String _themeId = 'indigo';
   bool _notifGranted = false;
 
   @override
@@ -247,49 +247,60 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0, delay: 300.ms),
           const SizedBox(height: 8),
           Text(
-            "Pick a color palette for your app.",
+            "Pick a clean color combo.",
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.outline),
           ).animate().fadeIn(delay: 400.ms),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          Text(
+            "Light",
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.outline),
+          ).animate().fadeIn(delay: 450.ms),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 14,
-            runSpacing: 14,
-            children: themePresets.map((preset) {
+            spacing: 10,
+            runSpacing: 10,
+            children: lightThemePresets.map((preset) {
               final selected = _themeId == preset.id;
               return GestureDetector(
                 onTap: () => setState(() => _themeId = preset.id),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  duration: const Duration(milliseconds: 200),
+                  width: 76,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    color: selected ? preset.lightSeed.withValues(alpha: 0.15) : Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(16),
+                    color: selected
+                        ? preset.seed.withValues(alpha: 0.15)
+                        : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: selected ? preset.lightSeed : Theme.of(context).colorScheme.outlineVariant,
+                      color: selected ? preset.seed : cs.outlineVariant,
                       width: selected ? 2.5 : 1,
                     ),
                   ),
-                  child: Row(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 20,
-                        height: 20,
+                        width: 26,
+                        height: 26,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [preset.lightSeed, preset.darkSeed],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: preset.seed,
                           shape: BoxShape.circle,
+                          boxShadow: selected
+                              ? [BoxShadow(color: preset.seed.withValues(alpha: 0.4), blurRadius: 8)]
+                              : null,
                         ),
+                        child: selected
+                            ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                            : null,
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(height: 6),
                       Text(
                         preset.name,
                         style: TextStyle(
-                          fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                          color: selected ? preset.lightSeed : null,
+                          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 11,
+                          color: selected ? preset.seed : null,
                         ),
                       ),
                     ],
@@ -298,6 +309,65 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               );
             }).toList(),
           ).animate().fadeIn(delay: 500.ms),
+          const SizedBox(height: 16),
+          Text(
+            "Dark",
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.outline),
+          ).animate().fadeIn(delay: 550.ms),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: darkThemePresets.map((preset) {
+              final selected = _themeId == preset.id;
+              return GestureDetector(
+                onTap: () => setState(() => _themeId = preset.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 76,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? preset.seed.withValues(alpha: 0.15)
+                        : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: selected ? preset.seed : cs.outlineVariant,
+                      width: selected ? 2.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: preset.seed,
+                          shape: BoxShape.circle,
+                          boxShadow: selected
+                              ? [BoxShadow(color: preset.seed.withValues(alpha: 0.4), blurRadius: 8)]
+                              : null,
+                        ),
+                        child: selected
+                            ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                            : null,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        preset.name,
+                        style: TextStyle(
+                          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 11,
+                          color: selected ? preset.seed : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ).animate().fadeIn(delay: 600.ms),
           const Spacer(flex: 3),
         ],
       ),

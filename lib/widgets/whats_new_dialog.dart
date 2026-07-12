@@ -38,10 +38,7 @@ class WhatsNewDialog extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final features = [
-      (Icons.gradient_rounded, 'Gradient app bar', 'Top bar now has a gradient and subtle shadow'),
-      (Icons.download_rounded, 'Download progress', 'Update dialog shows download progress, cancel, and retry'),
-      (Icons.flag_rounded, 'Section headers', 'Consistent icon + text styling across all sections'),
-      (Icons.colorize_rounded, 'Goal card accent', 'Left color accent bar and subtle elevation on cards'),
+      (Icons.auto_awesome_rounded, 'Visual improvements', 'Complete visual overhaul across the app'),
     ];
 
     return Dialog(

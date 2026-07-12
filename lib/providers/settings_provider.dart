@@ -3,37 +3,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stash/data/database.dart';
 
 class SettingsState {
-  final String themeMode;
   final String currency;
   final bool reduceMotion;
+  final bool showAchievements;
   final String language;
   final String themeId;
   final String? displayName;
   final bool hasOnboarded;
 
   const SettingsState({
-    this.themeMode = 'system',
     this.currency = 'USD',
     this.reduceMotion = false,
+    this.showAchievements = false,
     this.language = 'en',
-    this.themeId = 'aurora',
+    this.themeId = 'indigo',
     this.displayName,
     this.hasOnboarded = false,
   });
 
   SettingsState copyWith({
-    String? themeMode,
     String? currency,
     bool? reduceMotion,
+    bool? showAchievements,
     String? language,
     String? themeId,
     String? displayName,
     bool? hasOnboarded,
   }) =>
       SettingsState(
-        themeMode: themeMode ?? this.themeMode,
         currency: currency ?? this.currency,
         reduceMotion: reduceMotion ?? this.reduceMotion,
+        showAchievements: showAchievements ?? this.showAchievements,
         language: language ?? this.language,
         themeId: themeId ?? this.themeId,
         displayName: displayName ?? this.displayName,
@@ -52,7 +52,6 @@ class SettingsNotifier extends Notifier<SettingsState> {
     final s = await appDatabase.getSettings();
     if (s != null) {
       state = state.copyWith(
-        themeMode: s.themeMode,
         currency: s.currency,
         reduceMotion: s.reduceMotion,
         language: s.language,
@@ -68,11 +67,6 @@ class SettingsNotifier extends Notifier<SettingsState> {
     await _load();
   }
 
-  Future<void> setThemeMode(String mode) async => _update(AppSettingsCompanion(
-        id: const Value(0),
-        themeMode: Value(mode),
-      ));
-
   Future<void> setCurrency(String currency) async => _update(AppSettingsCompanion(
         id: const Value(0),
         currency: Value(currency),
@@ -82,6 +76,8 @@ class SettingsNotifier extends Notifier<SettingsState> {
         id: const Value(0),
         reduceMotion: Value(value),
       ));
+
+  void toggleShowAchievements() => state = state.copyWith(showAchievements: !state.showAchievements);
 
   Future<void> setLanguage(String lang) async => _update(AppSettingsCompanion(
         id: const Value(0),

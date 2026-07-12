@@ -42,11 +42,8 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final router = ref.watch(routerProvider);
-    final themeMode = switch (settings.themeMode) {
-      'light' => ThemeMode.light,
-      'dark' => ThemeMode.dark,
-      _ => ThemeMode.system,
-    };
+    final preset = presetById(settings.themeId);
+    final themeMode = preset.isDark ? ThemeMode.dark : ThemeMode.light;
 
     return MaterialApp.router(
       title: 'Stash',

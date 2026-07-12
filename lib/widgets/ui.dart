@@ -159,7 +159,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.actions,
     this.leading,
-    this.bottomCurve = 18,
+    this.bottomCurve = 24,
   });
 
   @override

@@ -146,6 +146,7 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
   Widget build(BuildContext context) {
     final color = Color(widget.goal.color);
     final isEdit = widget.existing != null;
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -161,30 +162,89 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
             isEdit ? 'Edit transaction' : 'Add to ${widget.goal.name}',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 16),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'deposit', label: Text('Deposit'), icon: Icon(Icons.add_rounded)),
-              ButtonSegment(value: 'withdrawal', label: Text('Withdraw'), icon: Icon(Icons.remove_rounded)),
-            ],
-            selected: {_type},
-            onSelectionChanged: (s) => setState(() => _type = s.first),
-            style: SegmentedButton.styleFrom(
-              selectedForegroundColor: Colors.white,
-              selectedBackgroundColor: color,
+          const SizedBox(height: 18),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _type = 'deposit'),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _type == 'deposit' ? color : Colors.transparent,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_rounded, size: 18, color: _type == 'deposit' ? Colors.white : cs.onSurface),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Deposit',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: _type == 'deposit' ? Colors.white : cs.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _type = 'withdrawal'),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _type == 'withdrawal' ? color : Colors.transparent,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.remove_rounded, size: 18, color: _type == 'withdrawal' ? Colors.white : cs.onSurface),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Withdraw',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: _type == 'withdrawal' ? Colors.white : cs.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           TextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Amount', prefixIcon: Icon(Icons.payments_rounded)),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              hintText: '0.00',
+              prefixIcon: Icon(Icons.payments_rounded, color: color),
+              prefixText: '${_symbols[ref.watch(settingsProvider).currency] ?? '\$'} ',
+              prefixStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: color),
+            ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Text('Category', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           SizedBox(
-            height: 36,
+            height: 38,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: GoalOptions.categories.length,
@@ -192,48 +252,94 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
               itemBuilder: (context, index) {
                 final cat = GoalOptions.categories[index];
                 final selected = _category == cat.name;
-                return ChoiceChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(cat.icon, size: 16, color: selected ? Colors.white : cat.color),
-                      const SizedBox(width: 4),
-                      Text(cat.name),
-                    ],
-                  ),
-                  selected: selected,
-                  selectedColor: cat.color,
-                  onSelected: (_) => setState(() => _category = cat.name),
-                  labelStyle: TextStyle(
-                    color: selected ? Colors.white : null,
-                    fontSize: 13,
+                return GestureDetector(
+                  onTap: () => setState(() => _category = cat.name),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected ? cat.color : cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: selected ? cat.color : cs.outlineVariant,
+                        width: selected ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(cat.icon, size: 16, color: selected ? Colors.white : cat.color),
+                        const SizedBox(width: 6),
+                        Text(
+                          cat.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                            color: selected ? Colors.white : cs.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           TextField(
             controller: _noteController,
-            decoration: const InputDecoration(labelText: 'Note (optional)'),
+            decoration: const InputDecoration(hintText: 'Note (optional)', prefixIcon: Icon(Icons.notes_rounded)),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: cs.outlineVariant),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                   child: const Text('Cancel'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
-                child: FilledButton.icon(
-                  onPressed: _submit,
-                  icon: const Icon(Icons.check_rounded),
-                  label: Text(isEdit ? 'Save changes' : 'Save transaction'),
-                  style: FilledButton.styleFrom(backgroundColor: color),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [color, HSLColor.fromAHSL(
+                        1.0,
+                        (HSLColor.fromColor(color).hue + 20) % 360,
+                        (HSLColor.fromColor(color).saturation * 0.85).clamp(0.0, 1.0),
+                        0.48,
+                      ).toColor()],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: FilledButton.icon(
+                    onPressed: _submit,
+                    icon: const Icon(Icons.check_rounded, color: Colors.white),
+                    label: Text(
+                      isEdit ? 'Save changes' : 'Save transaction',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
                 ),
               ),
             ],
